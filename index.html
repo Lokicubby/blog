@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#03c75a">
+<title>블로그 비서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf8f5;--card:#fff;--ink:#2b2b2b;--sub:#888;--accent:#03c75a;--line:#e8e4de;--red:#e5484d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);z-index:5}
+h1{font-size:17px;margin:0;padding:12px 16px}h1 small{font-size:11px;color:var(--sub);font-weight:400}
+nav{display:flex}
+nav button{flex:1;border:0;background:none;padding:10px 0;font-size:14px;color:var(--sub);border-bottom:2px solid transparent;position:relative}
+nav button.on{color:var(--ink);border-color:var(--accent);font-weight:600}
+nav .badge{position:absolute;top:4px;margin-left:2px;background:var(--red);color:#fff;font-size:10px;border-radius:8px;padding:0 5px}
+main{padding:16px;max-width:720px;margin:auto;padding-bottom:60px}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:16px;font-family:inherit;background:#fff}
+textarea{min-height:90px;resize:vertical;line-height:1.6}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.btn{display:block;border:0;border-radius:10px;padding:14px;font-size:16px;background:var(--accent);color:#fff;font-weight:600;width:100%;margin-top:12px}
+.btn.gray{background:#eee;color:var(--ink)}
+.btn.cp{background:#e52528}
+.sm{display:inline-block;border:0;border-radius:8px;padding:9px 12px;font-size:13px;margin:4px 4px 0 0;background:#eee;color:var(--ink)}
+.sm.g{background:var(--accent);color:#fff}.sm.r{background:#e52528;color:#fff}
+.tpls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.tplb{border:2px solid var(--line);background:#fff;border-radius:10px;padding:12px 6px;font-size:15px;font-weight:600}
+.tplb.on{border-color:var(--accent);background:#eef8f2}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.thumb{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.thumb .n{position:absolute;top:4px;left:4px;background:var(--accent);color:#fff;font-size:12px;border-radius:10px;padding:1px 7px}
+.thumb .ctl{display:flex}
+.thumb .ctl button{flex:1;border:0;background:#f3f3f3;padding:6px;font-size:12px}
+.thumb input{border:0;border-top:1px solid var(--line);border-radius:0;font-size:12px;padding:6px}
+.preview{line-height:1.8;white-space:pre-wrap;word-break:keep-all}
+.preview img{width:100%;border-radius:8px;margin:6px 0}
+.muted{color:var(--sub);font-size:13px}
+.warn{background:#fff7e6;border:1px solid #ffd591;border-radius:8px;padding:8px;font-size:13px;margin-top:8px;line-height:1.6}
+.item{border-bottom:1px solid var(--line);padding:12px 0}
+.loading{text-align:center;padding:24px;color:var(--sub)}
+.opt{border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;line-height:1.6}
+.chk div{font-size:14px;margin:3px 0}
+.big{display:block;width:100%;text-align:left;padding:16px;font-size:17px;font-weight:600;border-radius:12px;border:2px solid var(--accent);background:#fff;color:var(--ink);margin:10px 0}
+.big.cpb{border-color:#e52528}
+.big small{display:block;font-size:13px;font-weight:400;color:var(--sub);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.big.done{background:#eef8f2;border-color:#b7e4c7}
+.big.done::before{content:"✓ ";color:var(--accent)}
+.photoStep{display:flex;align-items:center;gap:10px;padding:8px 10px;border:2px dashed #ccc;border-radius:12px;margin:6px 0;font-size:15px}
+.photoStep img{width:56px;height:56px;object-fit:cover;border-radius:6px}
+.photoStep.map{border-color:#4a90e2}
+.stepT{font-size:13px;font-weight:700;color:var(--accent);margin:18px 0 0}
+.overdue{border:2px solid var(--red)}.today{border:2px solid var(--accent)}
+.sub{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line)}
+.scoreGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.scoreGrid select{padding:8px}
+.tagG{margin-top:10px;font-size:13px;line-height:1.7}
+.tagG a.t{display:inline-block;background:#eef8f2;color:#027a3a;border-radius:12px;padding:2px 9px;margin:3px 3px 0 0;text-decoration:none}
+</style>
+</head>
+<body>
+<header>
+ <h1>📝 블로그 비서 <small id="ver"></small></h1>
+ <nav>
+  <button data-t="write" class="on">새 글</button>
+  <button data-t="queue">보관함<span class="badge" id="badge" style="display:none"></span></button>
+  <button data-t="style">내 말투</button>
+  <button data-t="set">설정</button>
+ </nav>
+</header>
+<main>
+<!-- ===== 새 글 ===== -->
+<section id="write" class="tab on">
+ <div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center"><b>어떤 글을 쓸까요?</b><button class="sm" onclick="newPost()">＋ 새 글</button></div>
+  <div class="tpls" id="tpls"></div>
+  <div id="tplGuide" class="warn" style="display:none"></div>
+ </div>
+ <div class="card" id="xCoupang" style="display:none">
+  <b>🛒 쿠팡 구매 정보</b>
+  <p class="muted">쿠팡 앱 → 주문목록 화면을 캡처해서 넣으면 상품 정보를 읽어 와요. (이름·주소는 읽지 않아요)</p>
+  <button class="sm r" onclick="openApp('coupang')">쿠팡 앱 열기</button>
+  <label>주문 캡처 넣기</label>
+  <input type="file" accept="image/*" id="orderShot">
+  <div id="orderOut"></div>
+  <label>상품명</label><input id="cpName" placeholder="캡처에서 자동 입력">
+  <label><input type="checkbox" id="cpMake" checked style="width:auto"> 쿠팡 리뷰도 같이 만들기</label>
+  <label>쿠팡 파트너스 링크 (선택)</label><input id="cpLink" placeholder="https://link.coupang.com/...">
+ </div>
+ <div class="card" id="xTrip" style="display:none">
+  <b>✈ 여행 시리즈</b>
+  <label>여행 이름</label><input id="trName" list="trList" placeholder="예: OO 3박 4일 겨울" oninput="autoDay()"><datalist id="trList"></datalist>
+  <div class="row">
+   <div><label>글 종류</label><select id="trKind" onchange="trKindChange()"><option value="day">일차 기록</option><option value="guide">가이드편 (총정리)</option></select></div>
+   <div style="flex:.55"><label>몇 일차 / 몇 편</label><input id="trDay" type="number" min="1" value="1"></div>
+  </div>
+  <p class="muted" id="trHint"></p>
+ </div>
+ <div class="card" id="xSeries" style="display:none">
+  <b>📒 연재로 쓰기 (선택)</b>
+  <p class="muted">비워 두면 한 편짜리 글로 써요.</p>
+  <div class="row">
+   <div><label>연재 이름</label><input id="srName" list="srList" placeholder="예: 한글 30일" oninput="autoNo()"><datalist id="srList"></datalist></div>
+   <div style="flex:.45"><label>회차</label><input id="srNo" type="number" min="1" value="1"></div>
+  </div>
+ </div>
+ <div class="card" id="xMovie" style="display:none">
+  <b>🎬 영화 정보</b>
+  <label>영화 제목</label><input id="mvTitle" placeholder="예: ○○○">
+  <label>스포일러</label><select id="mvSpoil"><option>스포 없음</option><option>약간의 스포</option><option>결말 포함</option></select>
+  <p class="muted">포스터·스틸컷은 저작권 문제로 넣지 마시고, 티켓·상영관·팝콘처럼 직접 찍은 사진을 쓰세요.</p>
+ </div>
+ <div class="card" id="xPlace" style="display:none">
+  <b>📍 매장·장소 정보</b>
+  <p class="muted">글 속 지도 자리에 넣을 이름이에요. 모르는 건 비워 두면 [확인필요]로 표시돼요.</p>
+  <label>상호·지점 (지도 검색어)</label><input id="plName" placeholder="예: OO마트 OO점">
+  <button class="sm" onclick="openMap()">🗺 네이버 지도에서 확인</button>
+  <label>영업시간·휴무·주차·전화 등 (아는 것만)</label><textarea id="plInfo" style="min-height:70px"></textarea>
+ </div>
+ <div class="card">
+  <b>1. 사진 고르기</b>
+  <p class="muted">올릴 사진만 (최대 10장). ◀ ▶로 순서, 사진마다 한 줄 메모.</p>
+  <input type="file" id="files" accept="image/*" multiple>
+  <div class="thumbs" id="thumbs"></div>
+ </div>
+ <div class="card" id="xScores" style="display:none"></div>
+ <div class="card">
+  <b>2. 고르기</b>
+  <div class="row">
+   <div><label>카테고리</label><select id="cat"></select></div>
+   <div><label>내 기분</label><select id="mood"></select></div>
+  </div>
+  <div class="row">
+   <div><label>전체 평가</label><select id="rate">
+    <option value="5">5점 - 강력 추천</option><option value="4" selected>4점 - 추천</option><option value="3">3점 - 무난</option><option value="2">2점 - 아쉬움</option><option value="1">1점 - 비추천</option>
+   </select></div>
+   <div><label>글 길이</label><select id="len">
+    <option value="짧게(공백 제외 900자 내외)">짧게</option><option value="보통(공백 제외 1500~2000자)" selected>보통</option><option value="길게(공백 제외 2500자 이상)">길게</option>
+   </select></div>
+  </div>
+  <label>핵심 키워드 (비워두면 자동)</label>
+  <input id="kw" placeholder="예: OO마트 신상 디저트 / OO동 맛집">
+  <label>사실 메모 (대충 OK)</label>
+  <textarea id="memo" style="min-height:150px"></textarea>
+  <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="ad" style="width:auto"> 협찬·제공 받은 글이에요</label>
+  <button class="btn" id="gen">✨ 초안 만들기</button>
+  <p class="muted" id="usageMini" style="text-align:center;margin:8px 0 0"></p>
+ </div>
+ <div id="result"></div>
+</section>
+<!-- ===== 올리기 ===== -->
+<section id="up" class="tab"><div id="upBox"></div></section>
+<!-- ===== 보관함 ===== -->
+<section id="queue" class="tab"><div id="qAlert"></div><div class="card"><b>전체 글</b><div id="qList"></div></div></section>
+<!-- ===== 내 말투 ===== -->
+<section id="style" class="tab">
+ <div class="card">
+  <b>기본 말투</b>
+  <div class="row">
+   <div><label>어미</label><select id="s_end">
+    <option>~요체 (다녀왔어요)</option><option>~다체 (다녀왔다)</option><option>~요체와 ~다체 섞어서</option><option>친근한 반말 (다녀왔지~)</option>
+   </select></div>
+   <div><label>이모지</label><select id="s_emo">
+    <option>안 씀</option><option selected>가끔 (문단에 0~1개)</option><option>자주</option>
+   </select></div>
+  </div>
+  <div class="row">
+   <div><label>문장 길이</label><select id="s_sent">
+    <option>짧고 툭툭 끊어서</option><option selected>보통</option><option>길게 이어서 수다스럽게</option>
+   </select></div>
+   <div><label>웃음 표현</label><select id="s_laugh">
+    <option>안 씀</option><option selected>ㅎㅎ 가끔</option><option>ㅋㅋ 자주</option>
+   </select></div>
+  </div>
+  <div class="row">
+   <div><label>내 호칭</label><input id="s_me" placeholder="예: 저, OO맘"></div>
+   <div><label>아이 호칭 (실명 X)</label><input id="s_kid" placeholder="예: 첫째, 꼬맹이"></div>
+  </div>
+  <label>내가 직접 쓴 글 샘플</label>
+  <textarea id="s_sample" style="min-height:140px"></textarea>
+  <label>절대 쓰지 말 표현</label>
+  <textarea id="s_ban"></textarea>
+  <button class="btn" onclick="saveStyle()">💾 말투 저장</button>
+ </div>
+ <div class="card">
+  <b>글 종류별 설정</b>
+  <p class="muted">글 종류마다 말투·제목 형태·글 흐름·메모 양식·별점 항목을 바꿀 수 있어요. 써보면서 계속 고치시면 돼요. 여기 말투가 위 기본 말투보다 우선해요.</p>
+  <select id="tcSel" onchange="loadTc()"></select>
+  <label>말투</label><textarea id="tc_voice"></textarea>
+  <label>제목 형태</label><textarea id="tc_title" style="min-height:60px"></textarea>
+  <label>글 흐름</label><textarea id="tc_flow"></textarea>
+  <label>메모 양식</label><textarea id="tc_memo" style="min-height:150px"></textarea>
+  <label>찍을 사진</label><textarea id="tc_shots" style="min-height:60px"></textarea>
+  <label>별점 항목 (쉼표로 구분, 비우면 별점 없음)</label><input id="tc_axes">
+  <label>글자 크기 안내</label><input id="tc_font">
+  <label>예시 문단 (말투 샘플, 내용은 안 베껴요)</label><textarea id="tc_sample" style="min-height:120px"></textarea>
+  <div id="tcTrip">
+   <label>가이드편 글 흐름</label><textarea id="tc_guideFlow"></textarea>
+   <label>가이드편 메모 양식</label><textarea id="tc_guideMemo" style="min-height:120px"></textarea>
+  </div>
+  <button class="btn" onclick="saveTc()">💾 이 글 종류 저장</button>
+  <button class="sm" onclick="resetTc()">↺ 기본값으로</button>
+ </div>
+ <div class="card">
+  <b>말투 맞춰보기</b>
+  <p class="muted">같은 내용을 3가지 말투로 써볼게요. 제일 나다운 걸 고르고 살짝 고쳐 저장하세요.</p>
+  <button class="btn gray" onclick="styleTest()">🎯 말투 테스트</button>
+  <div id="stOut"></div>
+ </div>
+ <div class="card"><b>내가 고친 기록</b> <span class="muted" id="lCount"></span><div id="learnedList"></div></div>
+</section>
+<!-- ===== 설정 ===== -->
+<section id="set" class="tab">
+ <div class="card">
+  <b>AI 연결</b>
+  <label>Anthropic API 키</label><input id="key" type="password" placeholder="sk-ant-...">
+  <label>모델</label><input id="model" value="claude-sonnet-5-5">
+  <label>내 블로그 소개</label>
+  <textarea id="blogDesc" placeholder="예: 아이와 다니는 나들이·맛집·리뷰 기록"></textarea>
+  <label><input type="checkbox" id="askAlarm" checked style="width:auto"> 저장할 때 캘린더 알림 넣을지 묻기</label>
+  <p class="muted">키는 이 폰의 브라우저에만 저장돼요.</p>
+  <button class="btn" onclick="saveSet()">💾 저장</button>
+ </div>
+ <div class="card">
+  <b>💰 이번 달 AI 사용</b>
+  <div id="usageBox" style="margin-top:6px"></div>
+  <div class="row">
+   <div><label>월 예산 (원)</label><input id="budget" type="number" value="5000"></div>
+   <div><label>환율 (원/달러)</label><input id="fx" type="number" value="1450"></div>
+  </div>
+  <div class="row">
+   <div><label>입력 단가 ($/100만 토큰)</label><input id="pIn" type="number" step="0.01"></div>
+   <div><label>출력 단가 ($/100만 토큰)</label><input id="pOut" type="number" step="0.01"></div>
+  </div>
+  <p class="muted">이 폰에서 쓴 것만 센 추정치예요. 정확한 금액은 platform.claude.com 사용량 화면에서 확인하세요.</p>
+  <button class="btn" onclick="saveSet()">💾 저장</button>
+ </div>
+ <div class="card">
+  <b>백업</b>
+  <p class="muted">말투·글 종류 설정·보관함 글을 파일로 저장 (사진·API 키 제외).</p>
+  <button class="sm" onclick="exportData()">⬇ 백업 내려받기</button>
+  <label class="sm" style="display:inline-block;color:var(--ink);margin:4px 0 0">⬆ 백업 불러오기<input type="file" accept=".json" onchange="importData(this)" style="display:none"></label>
+ </div>
+ <div class="card"><b>변경 기록</b><div class="muted" id="changelog" style="white-space:pre-line;margin-top:6px"></div></div>
+</section>
+</main>
+<script>
+const VER='v4.1';
+const CHANGELOG=`v4.1 (11/17) 입력칸 예시 문구를 일반 문구로 교체 (기능 변화 없음)
+v4 (11/15) 글 종류 개편(제품·신상 리뷰/맛집/여행/학습지·엄마표/아이 체험 기록/영화), 글 종류별 말투·제목·흐름·메모·별점 항목 직접 수정, 대표 사진 글자 넣기, 별점 포인트·재구매각, 제품 정보 블록, 매장 정보와 지도 자리, 여행 일차별 글·가이드편, 태그 3단계, 글자 크기 안내, 이번 달 AI 사용 금액·예산 경고
+v3 (11/11) 템플릿 4종(나들이·쿠팡·연재·영화), 쿠팡 주문 캡처 읽기, 쿠팡 리뷰 동시 생성·올리기, 파트너스 고지, 영화 리뷰(스포 수준), 연재 회차 자동, 캘린더 알림·재알림, 밀린 글 경고
+v2 (11/11) 올리기 모드, 본문 구간별 복사, 사진 공유·저장, 사진 보관, 오늘 올릴 글
+v1 (11/11) 사진→초안, 말투 설정·학습, 검색노출 점검, 보관함`;
+const $=s=>document.querySelector(s);
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},
+ set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('저장 공간이 부족해요. 보관함을 정리해 주세요.')}}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CATS=['제품 리뷰','맛집·카페','여행','엄마표·학습지','아이 체험 기록','쇼핑·쿠팡 구매','영화','나들이·체험','아이·육아','쇼핑·제품 후기','일상 기록','기타'];
+const MOODS=['😊 만족','😍 감동','😆 신남','😌 편안','🤔 애매','😕 아쉬움','😤 실망'];
+const SC=['5','4.5','4','3.5','3','2.5','2','1.5','1'];
+const P_IN=2,P_OUT=10;
+const DEFAULT_BAN='결론적으로, 종합적으로, 다양한, ~라고 할 수 있습니다, ~하는 것이 중요합니다, 오늘은 ~에 대해 알아보겠습니다, 마치며, 총평, 완벽한, 최고의 선택, 놓치지 마세요';
+const PARTNER_DISC='이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.';
+const FONTS={bhs:['블랙한산스','"Black Han Sans"',''],dh:['도현','"Do Hyeon"',''],jua:['주아','"Jua"',''],sys:['기본 굵게','sans-serif','900 ']};
+const TPL={
+ review:{name:'🛍 제품·신상 리뷰',cat:'제품 리뷰',font:'본문 16 · 소제목 19',
+  voice:'20대 후반 여성. 부드럽게 알려주는 존댓말(~해요, ~더라고요, ~이에요, ~추천드려요). 딱딱한 설명체 말고 친구한테 꿀팁 알려주듯 가볍고 깔끔하게. 감탄은 짧게(진짜, 완전 정도). 이모지는 소제목이나 포인트에만 가끔.',
+  title:'"장소·브랜드 + 시기 + 제품군 + 신상/후기/가격 총정리" 형태. 예: OO 11월 베이커리 신상 가격 총정리',
+  flow:'한눈에 요약(언제·어디서·몇 개·총액) → 제품별 소개(제품 정보 블록 → 맛·사용감 → 제품 점수) → 제품끼리 비교·추천 순위 → 보관·먹는 팁 → 아쉬운 점 → 별점 포인트·재구매각 → 매장 정보 + [지도] → 이런 분께 추천',
+  memo:'구매 날짜·매장(지점):\n제품명 / 상품번호(가격표 숫자) / 가격 / 용량·개수:\n- \n- \n제품별 한 줄 평 + 점수 (예: 티라미수 4.5 재구매O):\n- \n보관·먹는 팁:\n아쉬운 점:',
+  shots:'매장 입구·코너 → 진열대 → 가격표(상품번호 보이게) → 포장 앞뒤 → 단면·실사용 → 한데 모은 사진(대표 사진용)',
+  axes:['만족도','가성비','재구매각'],
+  sample:'이번에 장 보러 갔다가 베이커리 코너에 처음 보는 디저트가 있어서 몇 가지 담아 왔어요. 가격표도 같이 찍어 왔으니까 장 보러 가실 때 참고해 보세요 :)\n\n제일 먼저 열어본 건 OO였는데요, 생각보다 덜 달아서 커피랑 같이 먹기 딱 좋더라고요. 다만 양이 꽤 많아서 소분해서 냉동해 두시는 걸 추천드려요!'},
+ food:{name:'🍜 맛집',cat:'맛집·카페',font:'본문 16 · 소제목 19',
+  voice:'친한 지인에게 말하는 다정한 존댓말(~했어요, ~더라고요, ~거든요, ~꼭 드셔 보세요). 정보 나열보다 "여기 진짜 괜찮았어요" 하고 추천해 주는 느낌. 사진 위주라 사진 사이 글은 2~3문장으로 짧게.',
+  title:'"지역여행·지역맛집 + 가게 이름 + 대표 메뉴나 특징 한 줄" 형태',
+  flow:'왜 갔는지·첫인상(짧게) → 메뉴판 → 메뉴별 사진과 맛 → 분위기·좌석 → 위생·화장실 → 별점 포인트·재방문각 → 이런 분께 추천 → (맨 뒤) 매장 정보 + [지도]',
+  memo:'방문 날짜·요일·시간대:\n누구랑:\n웨이팅:\n주문한 메뉴 / 가격:\n- \n- \n맛 한 줄:\n분위기·좌석:\n위생(테이블·화장실):\n아이 동반(아기의자·키즈메뉴):\n아쉬운 점:',
+  shots:'외관·간판 → 메뉴판 → 기본 상차림 → 메뉴별 가까이 → 한 입 단면 → 내부 분위기 → 화장실·주차장',
+  axes:['맛','분위기','위생','가성비','재방문각'],
+  sample:'여기는 솔직히 저만 알고 싶은 곳인데, 그래도 소개해 드릴게요 ㅎㅎ\n\n자리에 앉자마자 철판에서 지글지글 소리가 나는데 그때부터 벌써 기대되더라고요. 한 입 먹어보니 겉은 바삭하고 속은 촉촉해서, 왜 다들 기다려서 먹는지 알겠더라고요.'},
+ trip:{name:'✈ 여행',cat:'여행',font:'본문 19 · 소제목 24 (크게)',
+  voice:'30대 초반 여성. 친한 지인에게 존댓말로 다정하고 자상하게 알려주는 말투(~했어요, ~하시면 좋아요, ~챙겨 가세요). 이 글을 보고 그대로 따라 계획을 짤 수 있게 시간·이동수단·비용을 꼼꼼하게.',
+  title:'"국기 이모지 + 지역 + N박 N일 + 계절 여행 + N일차·핵심 장소" 형태',
+  flow:'오늘 일정 한눈에(시간순 요약) → 시간 순서대로 장소별 기록(이동 방법·소요 시간·비용) → 장소별 따라 하기 팁 → 아쉬운 점·이렇게 하면 더 좋아요 → 오늘 쓴 돈 → 다음 날 예고',
+  memo:'날짜·날씨·옷차림:\n시간별 일정 (예: 09:00 호텔 출발 → 09:40 OO역):\n- \n- \n이동수단·소요 시간:\n쓴 돈(항목별):\n- \n좋았던 곳:\n아쉬웠던 점·이렇게 하면 더 좋아요:',
+  shots:'장소마다 간판·입구 → 풍경 → 먹은 것 → 교통(역·표지판·패스) → 숙소 → 영수증·티켓',
+  axes:[],
+  guideFlow:'여행 한눈에(기간·인원·총비용·추천 계절) → 일차별 동선 요약 → 항목별 총비용(항공·숙소·교통·식비·입장료·쇼핑) → 숙소·교통 고르는 팁 → 준비물 체크리스트 → 다시 간다면 바꿀 것 → 일차별 글 모아보기',
+  guideMemo:'인원·기간:\n항공(항공사·가격):\n숙소(이름·박당 가격):\n교통패스·이동 비용:\n식비·입장료·쇼핑 합계:\n준비물 꿀팁:\n다시 간다면:',
+  sample:'첫날은 비행기 시간이 애매해서 무리하지 않고 숙소 근처 위주로 다녔어요. 처음 가시는 분들은 첫날 일정을 가볍게 잡아 두시면 훨씬 편하실 거예요.\n\n공항에서 시내까지는 기차로 OO분 정도 걸렸어요. 표는 역 자판기에서 바로 살 수 있으니 미리 걱정 안 하셔도 돼요 :)'},
+ study:{name:'📚 학습지·엄마표',cat:'엄마표·학습지',font:'본문 16 · 소제목 19',
+  voice:'아이 키우는 엄마의 담백하고 다정한 존댓말. 비슷한 고민을 하는 엄마에게 실제로 써본 걸 솔직하게 알려주는 느낌. 광고 같은 칭찬 금지, 안 맞았던 부분도 그대로.',
+  title:'"아이 연령·과목 + 고민이 담긴 한 문장 ｜ 제품·방법 이름 후기" 형태',
+  flow:'고민(왜 시작했는지·왜 바꿨는지) → 한눈에 정리(이름·대상·구성·가격) → 실사용 분석 소제목들(사용 기간과 루틴, 아이 반응, 난이도, 엄마 준비 부담) → 좋았던 점 / 아쉬운 점 → 많이 궁금해하시는 Q&A 3개 → 이런 아이에게 추천·비추천 → 별점 포인트·재구매각',
+  memo:'제품/방법 이름:\n시작한 이유(고민):\n사용 기간·하루 몇 분·주 몇 회:\n아이 반응:\n어려워한 부분:\n엄마 준비 시간:\n가격·구매처:\n좋은 점:\n아쉬운 점:\n다음 계획:',
+  shots:'교재 표지·구성 → 펼친 페이지 → 푸는 손(얼굴 X) → 다 푼 결과 → 책상 세팅',
+  axes:['아이 흥미','난이도 적정','엄마 편의','가성비','재구매각'],
+  sample:'연산 학습지만 1년 가까이 하다 보니 아이가 숫자만 보면 한숨부터 쉬더라고요. 그래서 이번 달부터 방법을 조금 바꿔봤어요.\n\n저녁 먹고 나서 식탁에서 짧게 하고 있어요. 처음 일주일은 집중을 잘 못 했는데, 요즘은 먼저 "오늘 거 하자" 하고 가져오더라고요.'},
+ kidlog:{name:'🧸 아이 체험 기록',cat:'아이 체험 기록',font:'본문 16 · 소제목 19',
+  voice:'엄마가 아이를 떠올리며 쓰는 일기 같은 따뜻한 존댓말. 정보보다 그날의 감정 위주("많이 떨렸을 텐데", "같이 있어서 즐거웠어요"). 문장은 짧고 담백하게, 과한 감탄은 빼고. 검색 키워드는 억지로 반복하지 말고 2~3번만.',
+  title:'아이와의 순간이 담긴 짧고 따뜻한 문장 + 활동·장소',
+  flow:'오늘 어떤 날이었는지 → 시간 순서로 장면별 기록(아이 표정·말·행동) → 엄마 마음 → 아이에게 하는 한마디 → (짧게) 장소·활동 정보',
+  memo:'어디서 무엇을:\n아이가 한 말:\n기억나는 표정·행동:\n엄마 마음:\n아이에게 하고 싶은 말:\n장소 정보(공개해도 되는 것만):',
+  shots:'장소 입구 → 아이 뒷모습·손 → 만든 것·결과물 → 함께한 순간(얼굴 X)',
+  axes:[],
+  sample:'오늘은 아이가 처음으로 혼자 무대에 서는 날이었어요. 아침부터 괜히 말수가 적어서, 많이 떨렸을 텐데 티를 안 내려고 애쓰는 게 보였어요.\n\n끝나고 나와서 제 손을 꼭 잡는데 그 손이 아직 촉촉하더라고요. 오늘 정말 멋있었어, 옆에 있어서 엄마도 너무 즐거웠어.'},
+ movie:{name:'🎬 영화 리뷰',cat:'영화',font:'본문 16 · 소제목 19',voice:'',
+  title:'"영화 제목 + 후기(결말·쿠키) + 한 줄 감상" 형태',
+  memo:'본 날·장소(극장/OTT):\n같이 본 사람:\n한 줄 감상:\n좋았던 장면:\n아쉬운 점:\n쿠키 영상:\n(알면) 감독·주연·러닝타임:',
+  shots:'티켓·예매내역 → 상영관/좌석 → 팝콘 등 직접 찍은 사진 (포스터·스틸컷 X)',
+  flow:'한 줄 평과 별점 → 기본 정보(메모에 있는 것만) → 줄거리(스포 수준 지키며 짧게) → 좋았던 점 → 아쉬운 점 → 아이와 봐도 되는지 → 이런 분께 추천',
+  axes:[],sample:''},
+ place:{hidden:true,name:'🧸 나들이 실측',cat:'나들이·체험',font:'본문 16 · 소제목 19',
+  memo:'날짜·요일·시간대:\n머문 시간:\n입장료/가격:\n주차:\n붐빈 정도:\n아이 반응 한 줄:\n아쉬운 점:',
+  shots:'입구·간판 → 주차장 → 전경 → 아이 뒷모습/손 → 가격표 → 화장실·수유실 → 아쉬운 부분',
+  flow:'방문 정보 요약(날짜·머문 시간·가격·주차) → 첫인상 → 공간별 후기 → 아이 반응 → 직접 겪은 팁 → 아쉬운 점 → 이런 집에 추천/비추천',axes:[]},
+ coupang:{hidden:true,name:'📦 쿠팡템 후기',cat:'쇼핑·쿠팡 구매',font:'본문 16 · 소제목 19',
+  memo:'산 이유:\n비교한 후보:\n사용 기간:\n좋은 점:\n별로인 점:',
+  shots:'택배·구성품 → 실사용(손·뒷모습) → 사용 후 상태 → 비교 사진',
+  flow:'왜 샀는지 → 비교한 후보 → 첫인상 → 사용 기간 후 달라진 점 → 단점 → 이런 집엔 비추',axes:[]},
+ series:{hidden:true,name:'📒 성장 연재',cat:'아이·육아',font:'본문 16 · 소제목 19',
+  memo:'오늘 해본 것:\n잘된 것:\n안 된 것:\n다음에 바꿔볼 것:',
+  shots:'작품·학습지 → 재료 → 과정(손) → 결과',
+  flow:'지난 회 한 줄 요약 → 이번에 해본 것 → 잘된 점/안 된 점 → 바꿔볼 것 → 다음 회 예고',axes:[]}
+};
+const TC=['voice','title','flow','memo','shots','axes','font','sample','guideFlow','guideMemo'];
+function tplOf(k){const b=TPL[k];if(!b)return {name:'',flow:'',memo:'',shots:'',axes:[],font:'본문 16 · 소제목 19'};return {...b,...((LS.get('tplCustom',{})||{})[k]||{})}}
+$('#ver').textContent=VER;$('#changelog').textContent=CHANGELOG;
+$('#cat').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
+$('#mood').innerHTML=MOODS.map(c=>`<option>${c}</option>`).join('');
+$('#tpls').innerHTML=Object.entries(TPL).filter(([k,t])=>!t.hidden).map(([k,t])=>`<button class="tplb" data-k="${k}" onclick="applyTpl('${k}')">${t.name}</button>`).join('');
+/* ---------- 사진 저장소 ---------- */
+const DB={db:null,
+ open(){return new Promise((res,rej)=>{if(this.db)return res(this.db);const r=indexedDB.open('blogbuddy',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('photos');r.onsuccess=()=>{this.db=r.result;res(this.db)};r.onerror=()=>rej(r.error)})},
+ async put(k,v){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('photos','readwrite');t.objectStore('photos').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})},
+ async get(k){const db=await this.open();return new Promise((res,rej)=>{const r=db.transaction('photos').objectStore('photos').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+ async del(k){const db=await this.open();return new Promise(res=>{const t=db.transaction('photos','readwrite');t.objectStore('photos').delete(k);t.oncomplete=res})}};
+/* ---------- 탭 ---------- */
+function switchTab(t){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+ document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id===t));
+ if(t==='queue')renderQueue(); if(t==='style')renderLearned(); if(t==='set')renderUsage(); window.scrollTo(0,0)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.t));
+/* ---------- 글 종류 ---------- */
+let curTpl='';
+function allMemos(){const s=new Set();Object.keys(TPL).forEach(k=>{const t=tplOf(k);[t.memo,t.guideMemo,TPL[k].memo,TPL[k].guideMemo].forEach(m=>m&&s.add(m))});return s}
+function isGuide(){return curTpl==='trip'&&$('#trKind').value==='guide'}
+function applyTpl(k){curTpl=k;const t=tplOf(k);
+ document.querySelectorAll('.tplb').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+ $('#cat').value=t.cat;
+ const m=$('#memo').value;if(!m.trim()||allMemos().has(m))$('#memo').value=isGuide()?t.guideMemo:t.memo;
+ if(['study','kidlog','series'].includes(k))$('#srList').innerHTML=nameList('series').map(s=>`<option value="${esc(s)}">`).join('');
+ if(k==='trip'){$('#trList').innerHTML=nameList('trip').map(s=>`<option value="${esc(s)}">`).join('');autoDay()}
+ showExtras();guide()}
+function guide(){const g=$('#tplGuide');if(!curTpl){g.style.display='none';return}const t=tplOf(curTpl);
+ g.style.display='block';
+ g.innerHTML=`<b>📷 찍을 사진</b><br>${esc(t.shots)}<br><b>✍ 글 흐름</b><br>${esc(isGuide()?t.guideFlow:t.flow)}<br><b>🔠 글자 크기</b> ${esc(t.font)}`
+  +(curTpl==='review'?`<br><button class="sm r" onclick="$('#cat').value='쇼핑·쿠팡 구매';showExtras()">🛒 쿠팡에서 산 제품이에요</button>`:'')}
+function showExtras(){const c=$('#cat').value,t=curTpl;
+ $('#xCoupang').style.display=c==='쇼핑·쿠팡 구매'?'block':'none';
+ $('#xMovie').style.display=c==='영화'?'block':'none';
+ $('#xSeries').style.display=['study','kidlog','series'].includes(t)?'block':'none';
+ $('#xTrip').style.display=t==='trip'?'block':'none';
+ $('#xPlace').style.display=(['review','food','place'].includes(t)||c==='맛집·카페')?'block':'none';
+ renderAxes()}
+$('#cat').onchange=showExtras;
+function nameList(kind){const Q=LS.get('queue',[]);return [...new Set(Q.map(q=>kind==='trip'?q.trip?.name:q.series?.name).filter(Boolean))]}
+function autoNo(){const n=$('#srName').value.trim(),Q=LS.get('queue',[]).filter(q=>q.series?.name===n);
+ $('#srNo').value=Q.length?Math.max(...Q.map(q=>+q.series.no||0))+1:1}
+function prevEp(n){const Q=LS.get('queue',[]).filter(q=>q.series?.name===n&&q.id!==current?.id).sort((a,b)=>b.series.no-a.series.no);return Q[0]?.title||''}
+function autoDay(){const n=$('#trName').value.trim(),k=$('#trKind').value,Q=LS.get('queue',[]);
+ const same=Q.filter(q=>q.trip?.name===n&&q.trip.kind===k&&q.id!==current?.id);
+ $('#trDay').value=same.length?Math.max(...same.map(q=>+q.trip.day||0))+1:1;
+ const days=Q.filter(q=>q.trip?.name===n&&q.trip.kind==='day').map(q=>+q.trip.day).sort((a,b)=>a-b);
+ $('#trHint').textContent=!n?'':days.length?`저장된 일차 기록: ${days.join('·')}일차${k==='guide'?' → 가이드편에서 모아서 정리해요':''}`:'아직 보관함에 저장된 일차 기록이 없어요'}
+function trKindChange(){const t=tplOf('trip'),m=$('#memo').value;
+ if(!m.trim()||allMemos().has(m))$('#memo').value=isGuide()?t.guideMemo:t.memo;autoDay();guide()}
+function openMap(){const n=$('#plName').value.trim();if(!n){alert('상호를 먼저 적어 주세요');return}
+ window.open('https://map.naver.com/p/search/'+encodeURIComponent(n),'_blank')}
+/* ---------- 별점 ---------- */
+function readScores(){const o={};document.querySelectorAll('#xScores select').forEach(s=>{if(s.value)o[s.dataset.ax]=s.value});return o}
+function renderAxes(vals){const ax=tplOf(curTpl).axes||[],box=$('#xScores');
+ if(!ax.length){box.style.display='none';box.innerHTML='';return}
+ const old=vals||readScores();box.style.display='block';
+ box.innerHTML='<b>⭐ 별점 포인트</b><p class="muted">내가 매긴 점수 그대로 글에 들어가요. 안 고른 항목은 빼고 써요.</p><div class="scoreGrid">'
+  +ax.map(a=>`<div><label>${esc(a)}</label><select data-ax="${esc(a)}"><option value="">-</option>${SC.map(v=>`<option ${old[a]==v?'selected':''}>${v}</option>`).join('')}</select></div>`).join('')+'</div>'}
+/* ---------- 쿠팡 주문 캡처 ---------- */
+let orderItems=[];
+$('#orderShot').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.value='';
+ $('#orderOut').innerHTML='<div class="loading">캡처 읽는 중...</div>';
+ try{const img=await resize(f,1400,0.85);
+  const t=await callClaude([{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},
+   {type:'text',text:'이 쿠팡 주문 화면 캡처에서 구매한 상품 정보만 읽어줘. 이름·주소·전화번호 같은 개인정보는 절대 출력하지 마. 다른 말 없이 JSON만: {"items":[{"name":"상품명","option":"옵션","price":"결제금액","date":"주문일","qty":"수량"}]} 안 보이는 값은 빈 문자열.'}],1500);
+  orderItems=parseJSON(t).items||[];if(!orderItems.length)throw new Error('상품을 찾지 못했어요. 주문목록 화면이 잘 보이게 다시 캡처해 주세요.');
+  $('#orderOut').innerHTML='<p class="muted">후기 쓸 상품을 눌러 주세요</p>'+orderItems.map((it,i)=>`<div class="opt" onclick="pickOrder(${i})"><b>${esc(it.name)}</b><br><span class="muted">${esc([it.option,it.price,it.date].filter(Boolean).join(' · '))}</span></div>`).join('')}
+ catch(err){$('#orderOut').innerHTML=`<div class="warn">${esc(err.message)}</div>`}};
+function pickOrder(i){const it=orderItems[i];$('#cpName').value=it.name;
+ const info=`상품명: ${it.name}\n옵션: ${it.option||'-'}\n결제금액: ${it.price||'-'}\n주문일: ${it.date||'-'}\n`;
+ $('#memo').value=info+$('#memo').value.replace(/^상품명:[\s\S]*?주문일:.*\n/,'');
+ $('#orderOut').innerHTML=`<p class="muted">✅ 선택됨. 아래 메모에 사용 소감을 채워 주세요.</p>`}
+/* ---------- 사진 ---------- */
+let photos=[];
+function resize(file,max,q){return new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);
+ img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');
+  c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',q))};img.onerror=rej;img.src=url})}
+$('#files').onchange=async e=>{const fs=[...e.target.files];
+ for(const f of fs){if(photos.length>=10){alert('사진은 10장까지예요.');break}
+  try{photos.push({full:await resize(f,1600,0.88),small:await resize(f,800,0.75),note:''})}catch(err){alert('읽을 수 없는 사진: '+f.name)}}
+ e.target.value='';renderThumbs()};
+function renderThumbs(){$('#thumbs').innerHTML=photos.map((p,i)=>`<div class="thumb"><span class="n">${i+1}</span><img src="${p.small}">
+ <div class="ctl"><button onclick="mv(${i},-1)">◀</button><button onclick="mv(${i},1)">▶</button><button onclick="rm(${i})">✕</button></div>
+ <input placeholder="한 줄 메모" value="${esc(p.note)}" oninput="photos[${i}].note=this.value"></div>`).join('');
+ const s=$('#thSrc');if(s&&current?.thumb){s.innerHTML=thOpts();s.value=Math.min(current.thumb.src||0,Math.max(0,photos.length-1));redrawThumb()}}
+function mv(i,d){const j=i+d;if(j<0||j>=photos.length)return;[photos[i],photos[j]]=[photos[j],photos[i]];renderThumbs()}
+function rm(i){photos.splice(i,1);renderThumbs()}
+function newPost(){if(current&&!confirm('화면을 비우고 새 글을 시작할까요? (보관함 글은 남아요)'))return;
+ photos=[];current=null;curTpl='';renderThumbs();$('#result').innerHTML='';
+ ['kw','memo','cpName','cpLink','srName','mvTitle','plName','plInfo','trName'].forEach(id=>$('#'+id).value='');
+ $('#srNo').value=1;$('#trDay').value=1;$('#trKind').value='day';$('#trHint').textContent='';
+ $('#ad').checked=false;$('#orderOut').innerHTML='';
+ document.querySelectorAll('.tplb').forEach(b=>b.classList.remove('on'));showExtras();guide();window.scrollTo(0,0)}
+/* ---------- 대표 사진 글자 ---------- */
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+const thOpts=()=>photos.map((p,i)=>`<option value="${i}">${i+1}번 사진</option>`).join('');
+async function drawThumb(cv,t){if(!cv||!t||!photos.length)return false;
+ const p=photos[Math.min(+t.src||0,photos.length-1)],img=await loadImg(p.full);
+ const W=1080,H=t.ratio==='orig'?Math.round(W*img.height/img.width):W;cv.width=W;cv.height=H;
+ const g=cv.getContext('2d'),s=Math.max(W/img.width,H/img.height),dw=img.width*s,dh=img.height*s;
+ g.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh);
+ const lines=String(t.main||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,3),sub=String(t.sub||'').trim();
+ if(!lines.length&&!sub)return true;
+ const [,fam,wt]=FONTS[t.font]||FONTS.bhs;
+ if(document.fonts&&t.font!=='sys'){try{await document.fonts.load(`80px ${fam}`,lines.join('')+sub)}catch(e){}}
+ const maxW=W*0.84,F=n=>`${wt}${n}px ${fam}, sans-serif`;
+ let fs=Math.round(W*0.12);g.font=F(fs);
+ const mw=()=>Math.max(1,...lines.map(l=>g.measureText(l).width));
+ while(fs>36&&mw()>maxW){fs-=3;g.font=F(fs)}const mainW=lines.length?mw():0;
+ let ss=Math.round(Math.min(fs*0.48,W*0.055));g.font=F(ss);
+ while(ss>22&&g.measureText(sub).width>maxW){ss-=2;g.font=F(ss)}const subW=sub?g.measureText(sub).width:0;
+ const lh=fs*1.2,gap=sub&&lines.length?ss*0.6:0,bh=(sub?ss*1.2:0)+gap+lines.length*lh;
+ const st=t.style||'grad';let y=st==='box'?(H-bh)/2:st==='top'?H*0.08:H-bh-H*0.08;
+ if(st==='grad'){const top=Math.max(0,y-H*0.18),gr=g.createLinearGradient(0,top,0,H);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.72)');g.fillStyle=gr;g.fillRect(0,top,W,H-top)}
+ if(st==='box'){const bw=Math.max(mainW,subW)+fs*0.9,pad=fs*0.4,x=(W-bw)/2;g.fillStyle='rgba(0,0,0,.55)';g.beginPath();
+  if(g.roundRect)g.roundRect(x,y-pad,bw,bh+pad*2,28);else g.rect(x,y-pad,bw,bh+pad*2);g.fill()}
+ if(st==='top'){g.fillStyle='rgba(255,255,255,.9)';g.fillRect(0,0,W,y+bh+H*0.05)}
+ const dark=st==='top';g.textAlign='center';g.textBaseline='top';
+ g.shadowColor=dark?'rgba(0,0,0,0)':'rgba(0,0,0,.45)';g.shadowBlur=dark?0:14;
+ if(sub){g.font=F(ss);g.fillStyle=dark?'#03a04b':'#ffe14d';g.fillText(sub,W/2,y);y+=ss*1.2+gap}
+ g.font=F(fs);g.fillStyle=dark?'#222':'#fff';lines.forEach(l=>{g.fillText(l,W/2,y);y+=lh});
+ g.shadowBlur=0;return true}
+let thT;function redrawThumb(){clearTimeout(thT);thT=setTimeout(()=>{const cv=$('#thCv');if(cv&&current)drawThumb(cv,current.thumb).catch(()=>{})},250)}
+function bindThumb(){if(!$('#thCv'))return;const t=current.thumb;
+ [['thSrc','src'],['thStyle','style'],['thFont','font'],['thRatio','ratio'],['thSub','sub'],['thMain','main']].forEach(([id,f])=>{const el=$('#'+id);
+  el.value=t[f]??'';el.oninput=el.onchange=()=>{t[f]=f==='src'?+el.value:el.value;redrawThumb()}});redrawThumb()}
+async function thumbData(t){const cv=document.createElement('canvas');return (await drawThumb(cv,t))?cv.toDataURL('image/jpeg',0.92):null}
+function hasThumb(c){return !!(c&&c.thumb&&(c.thumb.main||c.thumb.sub)&&photos.length)}
+async function dataFile(d,name){return new File([await (await fetch(d)).blob()],name,{type:'image/jpeg'})}
+async function shareOrSave(files,btn){if(!files.length)return;
+ if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files});mark(btn)}catch(e){}}
+ else{files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()},i*400));mark(btn);toast('사진을 번호순으로 저장했어요')}}
+async function saveThumbImg(btn){const d=await thumbData(current.thumb);if(!d){alert('대표 글자를 먼저 적어 주세요');return}shareOrSave([await dataFile(d,'00_대표.jpg')],btn)}
+/* ---------- AI ---------- */
+function monthKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function monthUsage(){const U=LS.get('usage',{}),s=LS.get('settings',{}),u=U.month===monthKey()?U:{in:0,out:0,n:0};
+ const won=Math.round(((u.in||0)*(+s.pIn||P_IN)+(u.out||0)*(+s.pOut||P_OUT))/1e6*(+s.fx||1450));
+ return {n:u.n||0,won,budget:+s.budget||5000}}
+function trackUsage(x){if(!x)return;let U=LS.get('usage',{});if(U.month!==monthKey())U={month:monthKey(),in:0,out:0,n:0};
+ U.in+=(x.input_tokens||0)+(x.cache_creation_input_tokens||0)+(x.cache_read_input_tokens||0);U.out+=x.output_tokens||0;U.n++;LS.set('usage',U);
+ renderUsage();const m=monthUsage();if(m.won>=m.budget*0.8)setTimeout(()=>toast(`이번 달 AI 약 ${m.won.toLocaleString()}원 / 예산 ${m.budget.toLocaleString()}원`,3000),1600)}
+function renderUsage(){const m=monthUsage(),b=$('#usageBox'),mini=$('#usageMini');
+ if(b)b.innerHTML=`${m.n}번 사용 · 약 <b>${m.won.toLocaleString()}원</b> / 예산 ${m.budget.toLocaleString()}원 (${Math.round(m.won/m.budget*100)}%)`;
+ if(mini)mini.textContent=`이번 달 AI 약 ${m.won.toLocaleString()}원 / ${m.budget.toLocaleString()}원`}
+async function callClaude(content,maxTokens=8000){
+ const s=LS.get('settings',{});
+ if(!s.key){alert('설정 탭에서 API 키를 먼저 넣어 주세요.');switchTab('set');throw new Error('API 키 없음')}
+ const m=monthUsage();if(m.won>=m.budget&&!confirm(`이번 달 예산(${m.budget.toLocaleString()}원)을 넘었어요. 지금 약 ${m.won.toLocaleString()}원 썼어요.\n그래도 진행할까요?`))throw new Error('예산 초과로 취소했어요');
+ const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+  headers:{'content-type':'application/json','x-api-key':s.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+  body:JSON.stringify({model:s.model||'claude-sonnet-5-5',max_tokens:maxTokens,messages:[{role:'user',content}]})});
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(j.error?.message||('오류 '+r.status));
+ trackUsage(j.usage);
+ if(j.stop_reason==='max_tokens')throw new Error('글이 너무 길어서 중간에 끊겼어요. 글 길이를 줄이거나 사진을 줄여서 다시 해 주세요.');
+ return (j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('')}
+function parseJSON(t){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<0)throw new Error('응답 형식 오류');return JSON.parse(t.slice(a,b+1))}
+function styleBlock(k){const st=LS.get('style',{}),L=LS.get('learned',[]),set=LS.get('settings',{}),t=k?tplOf(k):null;
+ let s=`[글쓴이 기본 말투]\n- 어미: ${st.end||'~요체'}\n- 이모지: ${st.emo||'가끔'}\n- 문장 길이: ${st.sent||'보통'}\n- 웃음 표현: ${st.laugh||'ㅎㅎ 가끔'}\n`;
+ if(st.me)s+=`- 글쓴이 자기 호칭: ${st.me}\n`;
+ s+=`- 아이 호칭: ${st.kid||'아이'} (아이 실명은 절대 쓰지 말고 이 호칭만)\n`;
+ if(set.blogDesc)s+=`- 블로그 성격: ${set.blogDesc}\n`;
+ if(t&&t.voice)s+=`\n[이 글 종류의 말투 - 기본 말투와 다르면 이걸 우선]\n${t.voice}\n`;
+ if(st.sample)s+=`\n[글쓴이가 직접 쓴 글 - 어휘, 리듬, 말버릇을 따라 할 것]\n${st.sample.slice(-2500)}\n`;
+ if(t&&t.sample)s+=`\n[이 글 종류 예시 문단 - 말투만 참고하고 내용·사실·숫자는 절대 가져오지 말 것]\n${t.sample}\n`;
+ if(L.length){s+=`\n[글쓴이가 AI 초안을 직접 고친 사례 - 고친 방향을 반영할 것]\n`;
+  L.slice(-6).forEach((l,i)=>{s+=`(${i+1}) 초안: ${l.before.slice(0,300)}\n    → 수정: ${l.after.slice(0,300)}\n`})}
+ s+=`\n[절대 쓰지 말 표현]\n${st.ban||DEFAULT_BAN}\n`;return s}
+/* ---------- 초안 생성 ---------- */
+let current=null;
+$('#gen').onclick=generate;
+async function generate(){
+ if(!photos.length&&!$('#memo').value.trim()){alert('사진이나 메모를 하나 이상 넣어 주세요.');return}
+ const T=tplOf(curTpl);
+ const cat=$('#cat').value,mood=$('#mood').value,rate=+$('#rate').value,len=$('#len').value,kw=$('#kw').value.trim(),memo=$('#memo').value.trim(),ad=$('#ad').checked,n=photos.length;
+ const isCp=cat==='쇼핑·쿠팡 구매',makeCp=isCp&&$('#cpMake').checked,cpName=$('#cpName').value.trim(),cpLink=isCp?$('#cpLink').value.trim():'';
+ const isMv=cat==='영화',mvTitle=$('#mvTitle').value.trim(),mvSpoil=$('#mvSpoil').value;
+ const isSr=['study','kidlog','series'].includes(curTpl)&&$('#srName').value.trim(),srName=$('#srName').value.trim(),srNo=+$('#srNo').value||1;
+ const trName=$('#trName').value.trim(),isTrip=curTpl==='trip'&&!!trName,trKind=$('#trKind').value,trDay=+$('#trDay').value||1,guideMode=isTrip&&trKind==='guide';
+ const plName=$('#plName').value.trim(),plInfo=$('#plInfo').value.trim(),hasPlace=$('#xPlace').style.display!=='none'&&!!(plName||plInfo);
+ const scores=readScores(),axes=T.axes||[];
+ const notes=photos.map((p,i)=>`[사진${i+1}] ${p.note||'(메모 없음)'}`).join('\n');
+ let extra='';
+ if(curTpl){extra+=`\n[글 흐름] ${guideMode?T.guideFlow:T.flow}\n`;if(T.title)extra+=`[제목 형태] ${T.title}\n`}
+ if(curTpl==='review')extra+=`\n[제품 정보 표기] 제품마다 후기 앞에 아래 블록을 넣어. 메모나 사진(가격표·포장)에서 확실히 읽히는 값만 쓰고, 아니면 [확인필요]. 값이 전혀 없는 줄은 빼도 돼.\n▶ 제품명\n· 상품번호:\n· 가격:\n· 용량·개수:\n· 찾는 곳(코너·진열 위치):\n`;
+ if(Object.keys(scores).length)extra+=`\n[별점 포인트 - 글쓴이가 직접 매긴 점수. 숫자를 절대 바꾸지 말 것]\n${Object.entries(scores).map(([a,v])=>`${a}: ${v} / 5`).join('\n')}\n→ '■ 별점 포인트' 소제목 아래 한 줄씩 "· 항목 ⭐ 점수/5 - 짧은 이유" 형태로. 재구매각·재방문각은 마지막 줄에 따로 강조.\n`;
+ if(axes.length)extra+=`메모에 제품별·메뉴별 점수가 있으면 그 소개마다 점수를 그대로 써. 점수는 절대 지어내지 마.\n`;
+ if(hasPlace)extra+=`\n[매장·장소 정보] 상호: ${plName||'[확인필요]'} / 아는 정보: ${plInfo||'(없음)'}\n→ '■ 매장 정보' 소제목 아래 상호·주소·영업시간·휴무·주차·전화를 '· '로 한 줄씩. 위 정보와 메모에 없는 항목은 [확인필요: 항목]. 그 바로 아래 단독 줄에 [지도].${curTpl==='food'?' 매장 정보는 반드시 글 맨 뒤(추천 문장 다음)에.':''}\n`;
+ if(isCp)extra+=`\n[쿠팡 구매 제품] 상품명: ${cpName||'(메모 참고)'}. 제품 스펙·성분·인증은 메모에 없으면 쓰지 마.\n`;
+ if(isMv)extra+=`\n[영화 리뷰 규칙]\n- 영화 제목: ${mvTitle||'(메모 참고)'}\n- 스포일러 수준: ${mvSpoil} (반드시 지킬 것)${mvSpoil!=='스포 없음'?' / 스포가 나오기 전에 "아래부터 스포 있어요" 같은 안내 한 줄':''}\n- 감독·배우·러닝타임·개봉일·관람등급은 메모에 있는 것만. 없으면 [확인필요]\n- 대사 인용은 한 문장 이내. 줄거리는 3~4문장 이내, 감상 위주\n- 핵심 키워드는 '${mvTitle||'영화 제목'} 후기' 형태${mvSpoil==='결말 포함'?', 연관 키워드로 결말·해석':''}${/쿠키/.test(memo)?', 쿠키 영상 정보 포함':''}\n- 아이와 함께 봐도 되는지 한 줄\n`;
+ if(isSr){const pv=prevEp(srName);extra+=`\n[연재] '${srName}' ${srNo}회. 제목은 반드시 "[${srName} ${srNo}] "로 시작.${pv?` 지난 회 제목: ${pv}`:' 첫 회이니 연재를 시작하는 이유를 짧게.'}\n`}
+ if(isTrip&&!guideMode){const pv=LS.get('queue',[]).filter(q=>q.trip?.name===trName&&q.trip.kind==='day'&&+q.trip.day<trDay&&q.id!==current?.id).sort((a,b)=>b.trip.day-a.trip.day)[0];
+  extra+=`\n[여행 일차 기록] '${trName}' ${trDay}일차.\n- 제목에 '${trName}'과 '${trDay}일차'를 넣어.\n- 본문 첫 소제목은 '■ ${trDay}일차 일정 한눈에', 그 아래 "· 시간 장소" 한 줄씩 시간 순서 요약.\n- 그다음 시간 순서대로 장소별 소제목. 장소마다 이동 방법·소요 시간·비용을 메모에 있는 만큼.\n- 장소마다 따라 하는 사람을 위한 팁 한 줄.\n- 마지막 쪽에 '■ ${trDay}일차 쓴 돈' 항목별 금액과 합계(메모 숫자로만 계산, 통화 표시 유지).${pv?`\n- 지난 일차 글 제목: ${pv.title}`:''}\n`}
+ if(guideMode){const days=LS.get('queue',[]).filter(q=>q.trip?.name===trName&&q.trip.kind==='day').sort((a,b)=>a.trip.day-b.trip.day);
+  if(!days.length&&!confirm('이 여행의 일차 기록이 보관함에 없어요. 메모만으로 가이드편을 만들까요?'))return;
+  extra+=`\n[여행 가이드편] '${trName}' 가이드 ${trDay}편 (총정리).\n- 제목에 '${trName}'과 '총정리' 또는 '가이드'를 넣어.\n- 아래 일차별 기록과 메모를 바탕으로, 이 글만 보고 똑같이 계획을 짤 수 있게.\n- 기록에 없는 장소·가격·시간은 지어내지 마. 모르면 [확인필요].\n- 비용은 항목별로 쓰고 합계는 기록에 있는 숫자로만, 계산식도 짧게.\n- '■ 일차별 글 모아보기' 소제목에 각 일차 글 제목을 나열(링크는 넣지 마).\n[일차별 기록]\n${days.map(q=>`<${q.trip.day}일차> ${q.title}\n${String(q.body).replace(/\[사진\d+\]|\[지도\]/g,'').slice(0,1500)}`).join('\n\n')||'(없음)'}\n`}
+ const prompt=`너는 아래 글쓴이를 대신해 네이버 블로그 글 초안을 쓰는 대필 도우미야. 사진과 메모는 글쓴이가 실제로 겪은 일이야.
+${styleBlock(curTpl)}
+[이번 글 정보]
+- 글 종류: ${T.name||'자유'}
+- 카테고리: ${cat}
+- 글쓴이 기분: ${mood}
+- 전체 평가: ${rate}점 / 5점
+- 핵심 키워드: ${kw||'(없음 - 사람들이 네이버에서 실제로 검색할 만한 구체적인 키워드를 정해)'}
+- 분량: ${len}
+- ${ad?'협찬/제공 받은 글':'직접 구매하거나 직접 경험한 글'}
+- 사실 메모: ${memo||'(없음)'}
+- 사진 ${n}장, 사진별 메모:
+${notes||'(사진 없음)'}
+${extra}
+[작성 규칙]
+1. 사람이 직접 쓴 후기처럼. 사진 속 구체적인 디테일을 근거로 쓰고 교과서식 일반론은 빼.
+2. 메모와 사진에 없는 사실(가격, 영업시간, 주소, 스펙, 시간, 거리 등)은 지어내지 마. 필요하면 [확인필요: 무엇]. 사진 속 가격표·메뉴판·안내문은 또렷하게 읽히는 것만 써.
+3. 아이의 실명, 학교, 어린이집, 사는 동네는 쓰지 마. 나이는 메모에 있을 때만 'O세' 정도로.
+4. 사진 위치는 [사진1] 처럼 단독 줄로, 모든 사진을 순서대로 한 번씩. 사진 사이 2~5문장.
+5. 검색 노출: 제목 20~35자, 핵심 키워드를 제목 앞쪽에. 첫 문단 3줄 안에 핵심 키워드와 이 글에서 알 수 있는 것. 핵심 키워드는 본문에 3~5회 자연스럽게. 연관 키워드 2~3개. 소제목 3~6개는 줄 맨 앞에 '■ '.
+6. 모바일에서 읽기 좋게: 문단은 1~3문장, 문단 사이 빈 줄. 정보 목록은 줄 맨 앞에 '· ', 제품·메뉴 이름 줄은 '▶ '. 링크는 넣지 마.
+7. 직접 겪은 사람만 쓸 수 있는 정보를 최소 2개. 아쉬운 점도 하나 이상.
+8. 마지막 쪽에 이런 분께 추천/비추천 한두 줄.
+9. ${ad?'본문 맨 첫 줄에 "이 글은 업체로부터 제품(또는 서비스)을 제공받아 솔직하게 작성했습니다." 를 넣어.':'광고처럼 들리는 과장 표현 금지.'}
+10. 태그(tagGroups): 네이버 검색 유입을 노려 3단계로. big=많이 검색되는 넓은 대표어 3~4개, mid=조금 좁힌 키워드 3~5개, long=지점명·지역·제품명·메뉴가 들어간 구체적인 세부어 4~6개. 띄어쓰기 없이, # 없이. 핵심 키워드는 big이나 mid에 꼭 넣어. 검색량 숫자는 지어내지 마.
+11. 대표 사진 글자(thumb): sub=작은 윗줄 12자 이내(장소·시기·분류), main=큰 글씨 1~2줄, 한 줄 9자 이내, 줄바꿈은 \\n. 검색 키워드가 보이게.
+${makeCp?`12. 쿠팡 리뷰도 따로 써: 블로그와 문장이 겹치지 않게 새로, 400~700자, 소제목·해시태그·링크 없이, 구매 이유 → 실사용 → 장점 → 단점 → 추천 대상 순서, 같은 말투. 별점은 ${rate}.`:''}
+[출력] 다른 말 없이 JSON만:
+{"titles":["제목안1","제목안2","제목안3"],"body":"본문","thumb":{"sub":"작은 윗줄","main":"큰 글씨"},"tagGroups":{"big":[],"mid":[],"long":[]},"keywords":["핵심 키워드","연관1","연관2"],"checklist":["올리기 전 확인할 것"]${makeCp?',"coupang":{"stars":'+rate+',"headline":"쿠팡 리뷰 한 줄 제목(20자 내외)","review":"쿠팡 리뷰 본문"}':''}}`;
+ const content=[...photos.map(p=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:p.small.split(',')[1]}})),{type:'text',text:prompt}];
+ $('#result').innerHTML='<div class="card loading">✍ 사진 보면서 쓰는 중... (30초~1분)</div>';
+ $('#result').scrollIntoView({behavior:'smooth'});
+ try{const d=parseJSON(await callClaude(content));
+  let body=d.body||'';
+  if(cpLink)body=PARTNER_DISC+'\n\n'+body+'\n\n🛒 제품 링크: '+cpLink;
+  const tg=d.tagGroups||{},tags=[...(tg.big||[]),...(tg.mid||[]),...(tg.long||[])];
+  current={id:current?.id||Date.now(),titles:d.titles||[],title:(d.titles||[''])[0],body,original:body,tags:tags.length?tags:(d.tags||[]),tagGroups:tg,
+   keywords:d.keywords||[kw],checklist:d.checklist||[],cat,tpl:curTpl,mood,rate,schedule:current?.schedule||'',status:'작성중',created:new Date().toISOString(),
+   cpName,cpLink,coupang:d.coupang?{stars:Math.min(5,Math.max(1,+d.coupang.stars||rate)),headline:d.coupang.headline||'',review:d.coupang.review||'',status:'미작성'}:null,
+   series:isSr?{name:srName,no:srNo}:null,movie:isMv?{title:mvTitle,spoil:mvSpoil}:null,
+   trip:isTrip?{name:trName,kind:trKind,day:trDay}:null,place:hasPlace?{name:plName,info:plInfo}:null,scores,
+   thumb:{src:0,style:'grad',font:'bhs',ratio:'sq',...(current?.thumb||{}),sub:d.thumb?.sub||'',main:d.thumb?.main||''}};
+  renderResult()}
+ catch(e){$('#result').innerHTML=`<div class="card warn">문제가 생겼어요: ${esc(e.message)}<br>다시 시도해 주세요.</div>`}}
+function tagGroupHtml(tg){if(!tg||!((tg.big||[]).length||(tg.mid||[]).length||(tg.long||[]).length))return '';
+ return `<div class="tagG"><b>태그 단계</b> <span class="muted">(AI 추정 · 누르면 네이버 검색으로 연관검색어 확인)</span>`
+  +[['big','대표'],['mid','중간'],['long','세부']].map(([k,n])=>(tg[k]||[]).length?`<div>${n}: ${tg[k].map(x=>`<a class="t" href="https://search.naver.com/search.naver?query=${encodeURIComponent(x)}" target="_blank">#${esc(x)}</a>`).join('')}</div>`:'').join('')
+  +`<div class="muted">정확한 월 검색량은 <a href="https://searchad.naver.com" target="_blank">네이버 검색광고</a> → 도구 → 키워드 도구에서 무료로 볼 수 있어요.</div></div>`}
+function renderResult(){const c=current,k=c.coupang;
+ c.thumb=c.thumb||{src:0,style:'grad',font:'bhs',ratio:'sq',sub:'',main:''};
+ $('#result').innerHTML=`<div class="card">
+  <b>3. 다듬기</b>
+  <label>제목 고르기</label>
+  <select onchange="$('#title').value=this.value;current.title=this.value;seo()">${c.titles.map(t=>`<option ${t===c.title?'selected':''}>${esc(t)}</option>`).join('')}</select>
+  <input id="title" style="margin-top:6px" value="${esc(c.title)}" oninput="current.title=this.value;seo()">
+  <label>본문 (직접 고치면 저장할 때 내 말투로 학습해요)</label>
+  <textarea id="body" style="min-height:420px" oninput="current.body=this.value;seo();preview()">${esc(c.body)}</textarea>
+  <label>태그 (쉼표로 구분)</label>
+  <input id="tags" value="${esc(c.tags.join(', '))}" oninput="current.tags=this.value.split(',').map(s=>s.trim()).filter(Boolean)">
+  ${tagGroupHtml(c.tagGroups)}
+  <div class="chk" id="seo" style="margin-top:12px"></div>
+  ${c.checklist.length?`<div class="warn"><b>올리기 전 확인</b><br>${c.checklist.map(esc).join('<br>')}</div>`:''}
+  <div class="sub"><b>🖼 대표 사진 글자</b>
+  ${photos.length?`
+   <div class="row"><div><label>사진</label><select id="thSrc">${thOpts()}</select></div>
+   <div><label>배치</label><select id="thStyle"><option value="grad">아래 · 어둡게</option><option value="box">가운데 박스</option><option value="top">위 · 흰 띠</option></select></div></div>
+   <div class="row"><div><label>글씨체</label><select id="thFont">${Object.entries(FONTS).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select></div>
+   <div><label>비율</label><select id="thRatio"><option value="sq">정사각형</option><option value="orig">원본 비율</option></select></div></div>
+   <label>작은 윗줄</label><input id="thSub">
+   <label>큰 글씨 (줄바꿈 가능, 2줄 권장)</label><textarea id="thMain" style="min-height:64px"></textarea>
+   <canvas id="thCv" style="width:100%;border-radius:8px;margin-top:8px;background:#eee"></canvas>
+   <button class="sm" onclick="saveThumbImg(this)">⬇ 대표 사진만 저장</button>`:'<p class="muted">사진을 넣으면 대표 사진 글자를 만들 수 있어요.</p>'}
+  </div>
+  ${k?`<div class="sub"><b>🛒 쿠팡 리뷰</b>
+   <div class="row"><div style="flex:.45"><label>별점</label><select onchange="current.coupang.stars=+this.value">${[5,4,3,2,1].map(n=>`<option ${n==k.stars?'selected':''}>${n}</option>`).join('')}</select></div>
+   <div><label>한 줄 제목</label><input value="${esc(k.headline)}" oninput="current.coupang.headline=this.value"></div></div>
+   <label>리뷰 본문</label><textarea style="min-height:220px" oninput="current.coupang.review=this.value">${esc(k.review)}</textarea></div>`:''}
+  <label>블로그 발행 예정 일시</label>
+  <input type="datetime-local" id="sched" value="${c.schedule||''}" onchange="current.schedule=this.value">
+  <button class="btn gray" onclick="finalize()">💾 보관함에 저장</button>
+  <button class="btn" onclick="startUpload()">📤 블로그 지금 올리기</button>
+  ${k?`<button class="btn cp" onclick="startCp()">🛒 쿠팡 리뷰 지금 올리기</button>`:''}
+  <button class="sm" onclick="generate()" style="margin-top:10px">🔁 다시 만들기</button>
+ </div>
+ <div class="card"><b>미리보기</b><div class="preview" id="pv" style="margin-top:8px"></div></div>`;
+ seo();preview();bindThumb()}
+function preview(){const pv=$('#pv');if(!pv)return;
+ pv.innerHTML=esc($('#body').value).replace(/\[사진(\d+)\]/g,(m,n)=>{const p=photos[n-1];return p?`<img src="${p.full}">`:`<div class="warn">📷 사진${n} 자리</div>`})
+  .replace(/^\[지도\]$/gm,`<div class="warn">📍 지도 자리 ${esc(current?.place?.name||'')}</div>`)
+  .replace(/^■ (.*)$/gm,'<b style="font-size:17px">■ $1</b>').replace(/^▶ (.*)$/gm,'<b>▶ $1</b>')}
+function seo(){const box=$('#seo');if(!box)return;
+ const t=$('#title').value,b=$('#body').value,kw=(current.keywords?.[0]||'').trim();
+ const plain=b.replace(/\[사진\d+\]|\[지도\]/g,''),len=plain.replace(/\s/g,'').length,cnt=kw?plain.split(kw).length-1:0;
+ const used=(b.match(/\[사진\d+\]/g)||[]).length,need=b.match(/\[확인필요[^\]]*\]/g)||[],first=plain.trim().split('\n').slice(0,6).join(' ');
+ const L=[[t.length>=15&&t.length<=45,`제목 ${t.length}자 (15~45자 권장)`],
+  [kw&&t.includes(kw),`제목에 핵심 키워드 "${kw}" 포함`],
+  [kw&&first.includes(kw),'첫 문단에 핵심 키워드 포함'],
+  [cnt>=2&&cnt<=6,`본문 키워드 ${cnt}회 (2~6회 권장)`],
+  [len>=800,`본문 ${len}자 (공백 제외, 800자 이상 권장)`],
+  [!photos.length||used===photos.length,`사진 자리 ${used}개 / 사진 ${photos.length}장`],
+  [!need.length,need.length?`확인 필요 ${need.length}곳: ${need.join(' ')}`:'확인 필요 표시 없음']];
+ if(current.place?.name)L.push([b.includes('[지도]'),'지도 자리 [지도] 있음']);
+ box.innerHTML='<b>검색노출 점검</b>'+L.map(([ok,m])=>`<div>${ok?'✅':'⚠'} ${esc(m)}</div>`).join('')}
+/* ---------- 저장 + 학습 + 알림 ---------- */
+async function finalize(silent){const c=current;if(!c)return;
+ if($('#title')){c.title=$('#title').value;c.body=$('#body').value;c.schedule=$('#sched').value}
+ let learnedN=0;
+ if(c.original&&c.body.trim()!==c.original.trim()){
+  const bp=c.original.split(/\n\s*\n/),ap=c.body.split(/\n\s*\n/),pairs=[];
+  for(let i=0;i<Math.min(bp.length,ap.length);i++){const x=bp[i].trim(),y=ap[i].trim();
+   if(x&&y&&x!==y&&!/^\[사진\d+\]$/.test(x)&&x!=='[지도]'&&x!==PARTNER_DISC)pairs.push({before:x,after:y,at:new Date().toISOString()})}
+  const L=LS.get('learned',[]);L.push(...pairs.slice(0,4));LS.set('learned',L.slice(-20));learnedN=Math.min(pairs.length,4)}
+ c.original=c.body;
+ const Q=LS.get('queue',[]),i=Q.findIndex(q=>q.id===c.id),old=i>=0?Q[i]:null;
+ if(i>=0)Q[i]={...c};else Q.push({...c});LS.set('queue',Q);
+ try{await DB.put(c.id,photos)}catch(e){alert('사진 저장 실패(저장 공간 부족일 수 있어요)')}
+ updateBadge();
+ if(silent)return;
+ toast(`보관함에 저장했어요${learnedN?` · 말투 ${learnedN}건 학습`:''}`);
+ if(c.schedule&&LS.get('settings',{}).askAlarm!==false&&old?.schedule!==c.schedule&&confirm('캘린더에 알림을 넣을까요?\n(올릴 시간 1시간 전에 울려요)'))addAlarm(c.id,'before')}
+function gcalUrl(title,start,mins,details){const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+ const end=new Date(start.getTime()+mins*60000);
+ return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+f(start)+'/'+f(end)+'&details='+encodeURIComponent(details)}
+function addAlarm(id,kind){const q=LS.get('queue',[]).find(x=>x.id===id);if(!q)return;
+ if(!q.schedule){alert('발행 예정 일시를 먼저 정해 주세요.');return}
+ const s=new Date(q.schedule);let start,title;
+ if(kind==='before'){start=new Date(s.getTime()-60*60000);title='📝 블로그 올리기: '+q.title}
+ else if(kind==='retry'){start=new Date(s);start.setDate(start.getDate()+1);start.setHours(9,0,0,0);title='⏰ 아직이면 지금 올리기! '+q.title}
+ else{start=new Date(s);start.setDate(start.getDate()+2);start.setHours(20,0,0,0);title='🛒 쿠팡 리뷰 쓰기: '+(q.cpName||q.title)}
+ window.open(gcalUrl(title,start,15,'블로그 비서 열기 → '+location.href.split('#')[0]),'_blank')}
+/* ---------- 앱 열기 ---------- */
+const APPS={blog:['com.nhn.android.blog','https://m.blog.naver.com'],coupang:['com.coupang.mobile','https://m.coupang.com']};
+function openApp(k,btn){mark(btn);const [pkg,url]=APPS[k];
+ if(/Android/i.test(navigator.userAgent))location.href=`intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${pkg};S.browser_fallback_url=${encodeURIComponent(url)};end`;
+ else window.open(url,'_blank')}
+/* ---------- 블로그 올리기 ---------- */
+let segs=[];
+async function startUpload(id){if(id)await openQ(id,true);else await finalize(true);if(!current)return;switchTab('up');renderUpload()}
+function renderUpload(){const c=current,T=tplOf(c.tpl),th=hasThumb(c);segs=[];let html='';
+ c.body.split(/(\[사진\d+\]|\[지도\])/).forEach(p=>{const m=p.match(/^\[사진(\d+)\]$/);
+  if(m){const ph=photos[m[1]-1];html+=`<div class="photoStep">${ph?`<img src="${ph.small}">`:''}<span>여기에 <b>사진 ${m[1]}</b> 넣기</span></div>`}
+  else if(p==='[지도]'){html+=`<div class="photoStep map">📍 <span>여기에 <b>장소(지도)</b> 넣기<br><span class="muted">글쓰기 화면 아래 '장소' 버튼 → 검색해서 추가</span></span></div>`
+   +(c.place?.name?`<button class="big" onclick="cp(current.place.name,this)">📋 장소 검색어 복사<small>${esc(c.place.name)}</small></button>`:'')}
+  else if(p.trim()){segs.push(p.trim());const i=segs.length-1;html+=`<button class="big" onclick="cp(segs[${i}],this)">📋 글 ${i+1} 복사<small>${esc(segs[i].slice(0,50))}</small></button>`}});
+ const d=c.schedule?new Date(c.schedule):null;
+ $('#upBox').innerHTML=`<div class="card">
+  <button class="sm" onclick="switchTab('queue')">← 보관함</button>
+  <h3 style="margin:10px 0 0">${esc(c.title)}</h3>
+  <p class="muted">위에서부터 순서대로 누르세요. 누른 버튼은 ✓로 바뀌어요.</p>
+  <p class="stepT">STEP 1 · 준비</p>
+  ${photos.length?`<button class="big" onclick="sharePhotos(this)">📷 사진 ${photos.length+(th?1:0)}장 저장<small>${th?'00번이 글자 넣은 대표 사진 · ':''}공유창에서 '저장' 또는 갤러리 앱 선택</small></button>`:''}
+  <button class="big" onclick="openApp('blog',this)">🟢 네이버 블로그 앱 열기<small>글쓰기(✏) 누르고 이 화면으로 돌아오세요</small></button>
+  <p class="stepT">STEP 2 · 제목</p>
+  <button class="big" onclick="cp(current.title,this)">📋 제목 복사<small>${esc(c.title)}</small></button>
+  <p class="stepT">STEP 3 · 본문 (복사 → 붙여넣기 → 사진 넣기 반복)</p>
+  <div class="warn">🔠 글자 크기 <b>${esc(T.font)}</b><br>본문 첫 칸을 누르고 글자 크기를 먼저 바꾼 다음 붙여넣으세요. 소제목(■)은 붙여넣은 뒤 그 줄만 골라 키워 주세요.</div>
+  ${th?`<div class="photoStep">🖼 <span>맨 위에 <b>00번 대표 사진</b> 넣고, 사진을 눌러 <b>대표</b>로 지정</span></div>`:''}
+  ${html}
+  <button class="sm" onclick="cp(current.body.replace(/\\[사진(\\d+)\\]/g,'(사진$1)').replace(/\\[지도\\]/g,'(지도)'),this)">또는 본문 한 번에 복사</button>
+  <p class="stepT">STEP 4 · 태그</p>
+  <button class="big" onclick="cp(tagText(),this)">📋 태그 복사<small>${esc(c.tags.slice(0,5).join(', '))}…</small></button>
+  <p class="stepT">STEP 5 · 발행</p>
+  <div class="warn">${d?`발행 설정 → <b>예약</b> → <b>${d.toLocaleString('ko-KR',{month:'long',day:'numeric',weekday:'short',hour:'numeric',minute:'2-digit'})}</b>`:'바로 발행하거나 발행 설정에서 예약 시간을 고르세요'}</div>
+  <button class="btn" onclick="markDone()">✅ 블로그 다 올렸어요</button>
+  ${d?`<button class="sm" onclick="addAlarm(current.id,'retry')">⏰ 지금 못 하면: 내일 아침 재알림 넣기</button>`:''}
+  ${c.coupang&&c.coupang.status!=='완료'?`<button class="btn cp" onclick="renderCp()">🛒 이어서 쿠팡 리뷰 올리기</button>`:''}
+ </div>`}
+function tagText(){return current.tags.map(t=>'#'+t.replace(/\s/g,'')).join(' ')}
+function markDone(){setStatus(current.id,q=>q.status='발행완료');current.status='발행완료';toast('블로그 완료!');
+ if(current.coupang&&current.coupang.status!=='완료'){if(confirm('쿠팡 리뷰도 이어서 올릴까요?'))return renderCp()}switchTab('queue')}
+/* ---------- 쿠팡 리뷰 올리기 ---------- */
+async function startCp(id){if(id)await openQ(id,true);else await finalize(true);if(!current?.coupang){alert('쿠팡 리뷰가 없는 글이에요');return}switchTab('up');renderCp()}
+function renderCp(){const c=current,k=c.coupang;switchTab('up');
+ $('#upBox').innerHTML=`<div class="card">
+  <button class="sm" onclick="switchTab('queue')">← 보관함</button>
+  <h3 style="margin:10px 0 0">🛒 쿠팡 리뷰</h3><p class="muted">${esc(c.cpName||c.title)}</p>
+  <p class="stepT">STEP 1 · 준비</p>
+  ${photos.length?`<button class="big cpb" onclick="sharePhotos(this,false)">📷 사진 저장<small>리뷰에 첨부할 사진 (실사용 사진 위주로 고르세요)</small></button>`:''}
+  <button class="big cpb" onclick="openApp('coupang',this)">🛒 쿠팡 앱 열기<small>마이쿠팡 → 리뷰 작성 메뉴에서 이 상품 선택</small></button>
+  <p class="stepT">STEP 2 · 별점</p>
+  <div class="warn" style="font-size:18px">${'★'.repeat(k.stars)}${'☆'.repeat(5-k.stars)} <b>${k.stars}점</b> 선택</div>
+  <p class="stepT">STEP 3 · 글</p>
+  <button class="big cpb" onclick="cp(current.coupang.headline,this)">📋 한 줄 제목 복사<small>${esc(k.headline)}</small></button>
+  <button class="big cpb" onclick="cp(current.coupang.review,this)">📋 리뷰 본문 복사<small>${esc(k.review.slice(0,50))}</small></button>
+  <button class="btn cp" onclick="cpDone()">✅ 쿠팡 리뷰 다 올렸어요</button>
+  <button class="sm" onclick="addAlarm(current.id,'cp')">⏰ 나중에: 쿠팡 리뷰 알림 넣기</button>
+ </div>`}
+function cpDone(){setStatus(current.id,q=>{if(q.coupang)q.coupang.status='완료'});if(current.coupang)current.coupang.status='완료';toast('쿠팡 리뷰 완료!');switchTab('queue')}
+/* ---------- 공통 ---------- */
+function mark(btn){btn&&btn.classList&&btn.classList.add('done')}
+async function cp(text,btn){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}mark(btn);toast('복사했어요')}
+function toast(m,ms=1400){const t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;z-index:99;max-width:90%;text-align:center';document.body.appendChild(t);setTimeout(()=>t.remove(),ms)}
+async function sharePhotos(btn,withThumb=true){const files=[];
+ if(withThumb&&hasThumb(current)){const d=await thumbData(current.thumb);if(d)files.push(await dataFile(d,'00_대표.jpg'))}
+ for(let i=0;i<photos.length;i++)files.push(await dataFile(photos[i].full,`${String(i+1).padStart(2,'0')}.jpg`));
+ shareOrSave(files,btn)}
+function setStatus(id,fn){const Q=LS.get('queue',[]),q=Q.find(x=>x.id===id);if(q){fn(q);LS.set('queue',Q)}updateBadge()}
+/* ---------- 보관함 ---------- */
+function pending(){const Q=LS.get('queue',[]),now=new Date(),end=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+ return {over:Q.filter(q=>q.status!=='발행완료'&&q.schedule&&new Date(q.schedule)<now),
+  today:Q.filter(q=>q.status!=='발행완료'&&q.schedule&&new Date(q.schedule)>=now&&new Date(q.schedule)<end),
+  cp:Q.filter(q=>q.coupang&&q.coupang.status!=='완료')}}
+function updateBadge(){const p=pending(),n=p.over.length+p.today.length;
+ $('#badge').style.display=n?'inline':'none';$('#badge').textContent=n;document.title=(n?`(${n}) `:'')+'블로그 비서'}
+function row(q){const now=new Date(),d=q.schedule?new Date(q.schedule):null;
+ const st=q.status==='발행완료'?'✅ 블로그 완료':d?(d<now?'🔴 시간 지남':'🗓 '+d.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})):'📝 작성중';
+ const cps=q.coupang?(q.coupang.status==='완료'?' · ✅ 쿠팡 완료':' · 🛒 쿠팡 미작성'):'';
+ const tr=q.trip?`✈ ${esc(q.trip.name)} ${q.trip.kind==='guide'?'가이드 '+q.trip.day+'편':q.trip.day+'일차'} · `:'';
+ return `<div class="item"><b>${esc(q.title)}</b><div class="muted">${tr}${st}${cps} · ${esc(q.cat)}</div>
+  ${q.status!=='발행완료'?`<button class="sm g" onclick="startUpload(${q.id})">📤 블로그</button>`:''}
+  ${q.coupang&&q.coupang.status!=='완료'?`<button class="sm r" onclick="startCp(${q.id})">🛒 쿠팡</button>`:''}
+  ${q.schedule&&q.status!=='발행완료'?`<button class="sm" onclick="addAlarm(${q.id},'retry')">⏰ 재알림</button>`:''}
+  <button class="sm" onclick="openQ(${q.id})">수정</button><button class="sm" onclick="delQ(${q.id})">삭제</button></div>`}
+function renderQueue(){const Q=LS.get('queue',[]).sort((a,b)=>(a.status==='발행완료')-(b.status==='발행완료')||(a.schedule||'9').localeCompare(b.schedule||'9'));
+ const p=pending();let a='';
+ if(p.over.length)a+=`<div class="card overdue"><b>🔴 시간 지난 글 ${p.over.length}개 · 지금 올려 주세요!</b>${p.over.map(row).join('')}</div>`;
+ if(p.today.length)a+=`<div class="card today"><b>🔔 오늘 올릴 글 ${p.today.length}개</b>${p.today.map(row).join('')}</div>`;
+ const cpOnly=p.cp.filter(q=>q.status==='발행완료');
+ if(cpOnly.length)a+=`<div class="card" style="border:2px solid #e52528"><b>🛒 쿠팡 리뷰 남은 글 ${cpOnly.length}개</b>${cpOnly.map(row).join('')}</div>`;
+ $('#qAlert').innerHTML=a;
+ $('#qList').innerHTML=Q.length?Q.map(row).join(''):'<p class="muted">아직 저장된 글이 없어요.</p>';updateBadge()}
+async function openQ(id,quiet){const q=LS.get('queue',[]).find(x=>x.id===id);if(!q)return;
+ current={...q,original:q.body};photos=(await DB.get(id).catch(()=>null))||[];
+ curTpl=q.tpl||'';$('#cat').value=q.cat;$('#cpName').value=q.cpName||'';$('#cpLink').value=q.cpLink||'';
+ $('#srName').value=q.series?.name||'';$('#srNo').value=q.series?.no||1;$('#mvTitle').value=q.movie?.title||'';if(q.movie)$('#mvSpoil').value=q.movie.spoil;
+ $('#trName').value=q.trip?.name||'';$('#trKind').value=q.trip?.kind||'day';$('#trDay').value=q.trip?.day||1;
+ $('#plName').value=q.place?.name||'';$('#plInfo').value=q.place?.info||'';
+ document.querySelectorAll('.tplb').forEach(b=>b.classList.toggle('on',b.dataset.k===curTpl));
+ showExtras();renderAxes(q.scores||{});guide();renderThumbs();
+ if(!quiet){switchTab('write');renderResult();$('#result').scrollIntoView()}}
+async function delQ(id){if(!confirm('삭제할까요? (사진도 함께 지워져요)'))return;LS.set('queue',LS.get('queue',[]).filter(x=>x.id!==id));await DB.del(id).catch(()=>{});renderQueue()}
+/* ---------- 말투 ---------- */
+function loadStyle(){const s=LS.get('style',{});
+ ['end','emo','sent','laugh'].forEach(k=>{if(s[k])$('#s_'+k).value=s[k]});
+ $('#s_me').value=s.me||'';$('#s_kid').value=s.kid||'';$('#s_sample').value=s.sample||'';$('#s_ban').value=s.ban||DEFAULT_BAN}
+function saveStyle(silent){LS.set('style',{end:$('#s_end').value,emo:$('#s_emo').value,sent:$('#s_sent').value,laugh:$('#s_laugh').value,
+ me:$('#s_me').value.trim(),kid:$('#s_kid').value.trim(),sample:$('#s_sample').value,ban:$('#s_ban').value});if(!silent)alert('말투를 저장했어요')}
+async function styleTest(){saveStyle(true);$('#stOut').innerHTML='<div class="loading">세 가지 말투로 써보는 중...</div>';
+ const p=`${styleBlock()}\n위 글쓴이 설정으로 '주말에 아이랑 새로 생긴 실내 놀이터에 다녀온 이야기'의 블로그 첫 문단(3~4문장)을 써줘.
+1번은 설정에 최대한 충실하게, 2번은 더 담백하고 정보 위주로, 3번은 더 수다스럽고 친근하게. 다른 말 없이 JSON만: {"opts":["1번","2번","3번"]}`;
+ try{const d=parseJSON(await callClaude([{type:'text',text:p}],1500));
+  $('#stOut').innerHTML=d.opts.map((o,i)=>`<div class="opt" onclick="pickStyle(${i})"><b>${['설정 그대로','더 담백하게','더 수다스럽게'][i]}</b><br><span id="opt${i}">${esc(o)}</span></div>`).join('')+'<p class="muted">제일 나다운 걸 눌러 주세요.</p>'}
+ catch(e){$('#stOut').innerHTML=`<div class="warn">${esc(e.message)}</div>`}}
+function pickStyle(i){const t=$('#opt'+i).textContent;
+ $('#stOut').innerHTML=`<label>내 말투에 더 가깝게 살짝 고쳐 주세요</label><textarea id="stEdit">${esc(t)}</textarea><button class="btn" onclick="saveStylePick()">이걸 내 말투 샘플로 저장</button>`}
+function saveStylePick(){const t=$('#stEdit').value.trim();if(!t)return;$('#s_sample').value=($('#s_sample').value+'\n\n'+t).trim();saveStyle(true);$('#stOut').innerHTML='<p class="muted">✅ 샘플에 추가했어요.</p>'}
+function renderLearned(){const L=LS.get('learned',[]);$('#lCount').textContent=`(${L.length}개, 최근 6개 반영 중)`;
+ $('#learnedList').innerHTML=L.slice().reverse().map((l,ri)=>{const i=L.length-1-ri;return `<div class="item"><div class="muted">초안: ${esc(l.before.slice(0,80))}…</div><div>→ ${esc(l.after.slice(0,80))}…</div><button class="sm" onclick="delL(${i})">삭제</button></div>`}).join('')||'<p class="muted">아직 없어요.</p>'}
+function delL(i){const L=LS.get('learned',[]);L.splice(i,1);LS.set('learned',L);renderLearned()}
+/* ---------- 글 종류별 설정 ---------- */
+function tcInit(){$('#tcSel').innerHTML=Object.entries(TPL).filter(([k,t])=>!t.hidden).map(([k,t])=>`<option value="${k}">${t.name}</option>`).join('');loadTc()}
+function loadTc(){const k=$('#tcSel').value,t=tplOf(k);
+ TC.forEach(f=>{const el=$('#tc_'+f);if(el)el.value=f==='axes'?(t.axes||[]).join(', '):(t[f]||'')});
+ $('#tcTrip').style.display=k==='trip'?'block':'none'}
+function saveTc(){const k=$('#tcSel').value,C=LS.get('tplCustom',{}),o={};
+ TC.forEach(f=>{const el=$('#tc_'+f);if(!el)return;let v=el.value;
+  if(f==='axes')v=v.split(',').map(s=>s.trim()).filter(Boolean);
+  const def=TPL[k][f],same=f==='axes'?JSON.stringify(v)===JSON.stringify(def||[]):v===(def||'');
+  if(!same)o[f]=v});
+ C[k]=o;LS.set('tplCustom',C);if(curTpl===k){guide();renderAxes()}toast('저장했어요')}
+function resetTc(){if(!confirm('이 글 종류를 기본값으로 되돌릴까요?'))return;const C=LS.get('tplCustom',{});delete C[$('#tcSel').value];LS.set('tplCustom',C);loadTc();if(curTpl){guide();renderAxes()}toast('기본값으로 돌렸어요')}
+/* ---------- 설정 ---------- */
+function loadSet(){const s=LS.get('settings',{});$('#key').value=s.key||'';$('#model').value=s.model||'claude-sonnet-5-5';$('#blogDesc').value=s.blogDesc||'';$('#askAlarm').checked=s.askAlarm!==false;
+ $('#budget').value=s.budget||5000;$('#fx').value=s.fx||1450;$('#pIn').value=s.pIn||P_IN;$('#pOut').value=s.pOut||P_OUT;renderUsage()}
+function saveSet(){LS.set('settings',{...LS.get('settings',{}),key:$('#key').value.trim(),model:$('#model').value.trim(),blogDesc:$('#blogDesc').value.trim(),askAlarm:$('#askAlarm').checked,
+ budget:+$('#budget').value||5000,fx:+$('#fx').value||1450,pIn:+$('#pIn').value||P_IN,pOut:+$('#pOut').value||P_OUT});renderUsage();alert('저장했어요')}
+function exportData(){const d={ver:VER,style:LS.get('style',{}),learned:LS.get('learned',[]),queue:LS.get('queue',[]),tplCustom:LS.get('tplCustom',{}),blogDesc:LS.get('settings',{}).blogDesc||''};
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,1)],{type:'application/json'}));a.download='블로그비서_백업.json';a.click()}
+function importData(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);
+ if(d.style)LS.set('style',d.style);if(d.learned)LS.set('learned',d.learned);if(d.queue)LS.set('queue',d.queue);if(d.tplCustom)LS.set('tplCustom',d.tplCustom);
+ if(d.blogDesc){const s=LS.get('settings',{});s.blogDesc=d.blogDesc;LS.set('settings',s)}loadStyle();loadSet();loadTc();updateBadge();alert('불러왔어요')}catch(e){alert('백업 파일이 올바르지 않아요')}};r.readAsText(f)}
+/* ---------- 시작 ---------- */
+loadStyle();loadSet();tcInit();updateBadge();
+{const p=pending();if(p.over.length||p.today.length)switchTab('queue')}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateBadge();if($('#queue').classList.contains('on'))renderQueue()}});
+</script>
+</body>
+</html>
