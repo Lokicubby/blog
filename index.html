@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#03c75a">
 <title>블로그 비서</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +30,7 @@ textarea{min-height:90px;resize:vertical;line-height:1.6}
 .btn.gray{background:#eee;color:var(--ink)}
 .btn.cp{background:#e52528}
 .sm{display:inline-block;border:0;border-radius:8px;padding:9px 12px;font-size:13px;margin:4px 4px 0 0;background:#eee;color:var(--ink)}
+a.sm{text-decoration:none}
 .sm.g{background:var(--accent);color:#fff}.sm.r{background:#e52528;color:#fff}
 .tpls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .tplb{border:2px solid var(--line);background:#fff;border-radius:10px;padding:12px 6px;font-size:15px;font-weight:600}
@@ -221,7 +223,8 @@ textarea{min-height:90px;resize:vertical;line-height:1.6}
  <div class="card">
   <b>AI 연결</b>
   <label>Anthropic API 키</label><input id="key" type="password" placeholder="sk-ant-...">
-  <label>모델</label><input id="model" value="claude-sonnet-5-5">
+  <label>모델 (고르면 단가가 바뀌고 바로 적용돼요)</label><select id="model" onchange="modelChange()"></select>
+  <p class="muted" id="modelInfo" style="margin:6px 0 0"></p>
   <label>내 블로그 소개</label>
   <textarea id="blogDesc" placeholder="예: 아이와 다니는 나들이·맛집·리뷰 기록"></textarea>
   <label><input type="checkbox" id="askAlarm" checked style="width:auto"> 저장할 때 캘린더 알림 넣을지 묻기</label>
@@ -252,8 +255,9 @@ textarea{min-height:90px;resize:vertical;line-height:1.6}
 </section>
 </main>
 <script>
-const VER='v4.1';
-const CHANGELOG=`v4.1 (11/17) 입력칸 예시 문구를 일반 문구로 교체 (기능 변화 없음)
+const VER='v4.2';
+const CHANGELOG=`v4.2 (11/19) Sonnet 5.5에 맞춰 생각 강도·답 길이 한도 조정(끊김·비용 줄임), 모델 드롭다운(고르면 단가 자동·바로 적용), 요청마다 그때 모델 가격으로 비용 계산·방금 쓴 금액 표시, 오류 한국어 안내(잔액 부족·키 오류·서버 바쁨 등 + Console 바로가기), 검색 엔진 노출 차단
+v4.1 (11/17) 입력칸 예시 문구를 일반 문구로 교체 (기능 변화 없음)
 v4 (11/15) 글 종류 개편(제품·신상 리뷰/맛집/여행/학습지·엄마표/아이 체험 기록/영화), 글 종류별 말투·제목·흐름·메모·별점 항목 직접 수정, 대표 사진 글자 넣기, 별점 포인트·재구매각, 제품 정보 블록, 매장 정보와 지도 자리, 여행 일차별 글·가이드편, 태그 3단계, 글자 크기 안내, 이번 달 AI 사용 금액·예산 경고
 v3 (11/11) 템플릿 4종(나들이·쿠팡·연재·영화), 쿠팡 주문 캡처 읽기, 쿠팡 리뷰 동시 생성·올리기, 파트너스 고지, 영화 리뷰(스포 수준), 연재 회차 자동, 캘린더 알림·재알림, 밀린 글 경고
 v2 (11/11) 올리기 모드, 본문 구간별 복사, 사진 공유·저장, 사진 보관, 오늘 올릴 글
@@ -266,6 +270,12 @@ const CATS=['제품 리뷰','맛집·카페','여행','엄마표·학습지','�
 const MOODS=['😊 만족','😍 감동','😆 신남','😌 편안','🤔 애매','😕 아쉬움','😤 실망'];
 const SC=['5','4.5','4','3.5','3','2.5','2','1.5','1'];
 const P_IN=2,P_OUT=10;
+const MODELS={
+ 'claude-haiku-5-5':{short:'Haiku 5.5',name:'Haiku 5.5 · 가장 저렴',pIn:0.1,pOut:0.5,tip:'아주 저렴해요. 짧은 글·리뷰부터 시험해 보고, 긴 블로그 글은 품질을 비교한 뒤 쓰세요.'},
+ 'claude-sonnet-5-5':{short:'Sonnet 5.5',name:'Sonnet 5.5 · 기본 추천',pIn:2,pOut:10,tip:'블로그 초안 기본값이에요.'},
+ 'claude-opus-5-5':{short:'Opus 5.5',name:'Opus 5.5 · 공들일 글',pIn:4,pOut:20,tip:'Sonnet보다 약 2배 비싸요. 중요한 글에만 쓰세요.'}};
+const DEF_MODEL='claude-sonnet-5-5';
+const CONSOLE='https://platform.claude.com/',CONSOLE_BILLING='https://platform.claude.com/settings/billing';
 const DEFAULT_BAN='결론적으로, 종합적으로, 다양한, ~라고 할 수 있습니다, ~하는 것이 중요합니다, 오늘은 ~에 대해 알아보겠습니다, 마치며, 총평, 완벽한, 최고의 선택, 놓치지 마세요';
 const PARTNER_DISC='이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.';
 const FONTS={bhs:['블랙한산스','"Black Han Sans"',''],dh:['도현','"Do Hyeon"',''],jua:['주아','"Jua"',''],sys:['기본 굵게','sans-serif','900 ']};
@@ -398,10 +408,10 @@ $('#orderShot').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.targ
  $('#orderOut').innerHTML='<div class="loading">캡처 읽는 중...</div>';
  try{const img=await resize(f,1400,0.85);
   const t=await callClaude([{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}},
-   {type:'text',text:'이 쿠팡 주문 화면 캡처에서 구매한 상품 정보만 읽어줘. 이름·주소·전화번호 같은 개인정보는 절대 출력하지 마. 다른 말 없이 JSON만: {"items":[{"name":"상품명","option":"옵션","price":"결제금액","date":"주문일","qty":"수량"}]} 안 보이는 값은 빈 문자열.'}],1500);
+   {type:'text',text:'이 쿠팡 주문 화면 캡처에서 구매한 상품 정보만 읽어줘. 이름·주소·전화번호 같은 개인정보는 절대 출력하지 마. 다른 말 없이 JSON만: {"items":[{"name":"상품명","option":"옵션","price":"결제금액","date":"주문일","qty":"수량"}]} 안 보이는 값은 빈 문자열.'}],4000,'low');
   orderItems=parseJSON(t).items||[];if(!orderItems.length)throw new Error('상품을 찾지 못했어요. 주문목록 화면이 잘 보이게 다시 캡처해 주세요.');
   $('#orderOut').innerHTML='<p class="muted">후기 쓸 상품을 눌러 주세요</p>'+orderItems.map((it,i)=>`<div class="opt" onclick="pickOrder(${i})"><b>${esc(it.name)}</b><br><span class="muted">${esc([it.option,it.price,it.date].filter(Boolean).join(' · '))}</span></div>`).join('')}
- catch(err){$('#orderOut').innerHTML=`<div class="warn">${esc(err.message)}</div>`}};
+ catch(err){$('#orderOut').innerHTML=errHtml(err)}};
 function pickOrder(i){const it=orderItems[i];$('#cpName').value=it.name;
  const info=`상품명: ${it.name}\n옵션: ${it.option||'-'}\n결제금액: ${it.price||'-'}\n주문일: ${it.date||'-'}\n`;
  $('#memo').value=info+$('#memo').value.replace(/^상품명:[\s\S]*?주문일:.*\n/,'');
@@ -470,27 +480,54 @@ async function shareOrSave(files,btn){if(!files.length)return;
 async function saveThumbImg(btn){const d=await thumbData(current.thumb);if(!d){alert('대표 글자를 먼저 적어 주세요');return}shareOrSave([await dataFile(d,'00_대표.jpg')],btn)}
 /* ---------- AI ---------- */
 function monthKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
-function monthUsage(){const U=LS.get('usage',{}),s=LS.get('settings',{}),u=U.month===monthKey()?U:{in:0,out:0,n:0};
- const won=Math.round(((u.in||0)*(+s.pIn||P_IN)+(u.out||0)*(+s.pOut||P_OUT))/1e6*(+s.fx||1450));
- return {n:u.n||0,won,budget:+s.budget||5000}}
-function trackUsage(x){if(!x)return;let U=LS.get('usage',{});if(U.month!==monthKey())U={month:monthKey(),in:0,out:0,n:0};
- U.in+=(x.input_tokens||0)+(x.cache_creation_input_tokens||0)+(x.cache_read_input_tokens||0);U.out+=x.output_tokens||0;U.n++;LS.set('usage',U);
+function legacyUsd(u,s){return ((u.in||0)*(+s.pIn||P_IN)+(u.out||0)*(+s.pOut||P_OUT))/1e6}
+function monthUsage(){const U=LS.get('usage',{}),s=LS.get('settings',{}),cur=U.month===monthKey(),u=cur?U:{in:0,out:0,n:0};
+ const usd=u.usd!=null?u.usd:legacyUsd(u,s);
+ return {n:u.n||0,won:Math.round(usd*(+s.fx||1450)),budget:+s.budget||5000,last:cur&&U.lastWon!=null?U.lastWon:null}}
+function trackUsage(x){if(!x)return;const s=LS.get('settings',{});let U=LS.get('usage',{});
+ if(U.month!==monthKey())U={month:monthKey(),in:0,out:0,n:0,usd:0};
+ if(U.usd==null)U.usd=legacyUsd(U,s);
+ const i=(x.input_tokens||0)+(x.cache_creation_input_tokens||0)+(x.cache_read_input_tokens||0),o=x.output_tokens||0;
+ const callUsd=(i*(+s.pIn||P_IN)+o*(+s.pOut||P_OUT))/1e6;
+ U.in+=i;U.out+=o;U.n++;U.usd+=callUsd;U.lastWon=Math.round(callUsd*(+s.fx||1450));LS.set('usage',U);
  renderUsage();const m=monthUsage();if(m.won>=m.budget*0.8)setTimeout(()=>toast(`이번 달 AI 약 ${m.won.toLocaleString()}원 / 예산 ${m.budget.toLocaleString()}원`,3000),1600)}
-function renderUsage(){const m=monthUsage(),b=$('#usageBox'),mini=$('#usageMini');
- if(b)b.innerHTML=`${m.n}번 사용 · 약 <b>${m.won.toLocaleString()}원</b> / 예산 ${m.budget.toLocaleString()}원 (${Math.round(m.won/m.budget*100)}%)`;
- if(mini)mini.textContent=`이번 달 AI 약 ${m.won.toLocaleString()}원 / ${m.budget.toLocaleString()}원`}
-async function callClaude(content,maxTokens=8000){
+function shortModel(id){return MODELS[id]?MODELS[id].short:id}
+function renderUsage(){const m=monthUsage(),b=$('#usageBox'),mini=$('#usageMini'),md=shortModel(LS.get('settings',{}).model||DEF_MODEL);
+ const last=m.last!=null?` · 방금 약 ${m.last.toLocaleString()}원`:'';
+ if(b)b.innerHTML=`${m.n}번 사용 · 약 <b>${m.won.toLocaleString()}원</b> / 예산 ${m.budget.toLocaleString()}원 (${Math.round(m.won/m.budget*100)}%)${last}`;
+ if(mini)mini.textContent=`이번 달 AI 약 ${m.won.toLocaleString()}원 / ${m.budget.toLocaleString()}원 · ${md}${last}`}
+function apiErr(st,j){const m=(j&&j.error&&j.error.message)||'',ty=(j&&j.error&&j.error.type)||'';let msg,link,lt;
+ if(st==='net')msg='인터넷 연결을 확인하고 다시 시도해 주세요.';
+ else if(/credit balance/i.test(m)){msg='충전 잔액이 없어요. Console → Billing에서 충전한 뒤 다시 해 주세요. (자동 충전은 꺼 둔 그대로 두세요)';link=CONSOLE_BILLING;lt='💳 Console 충전 화면 열기'}
+ else if(st===401||ty==='authentication_error'){msg='API 키가 맞지 않거나 만료됐어요. Console → API 키에서 새 키를 만들어 설정 탭에 넣어 주세요.';link=CONSOLE;lt='🔑 Console 열기'}
+ else if(st===403||ty==='permission_error'){msg='이 키로는 이 요청을 할 수 없어요. 키 범위(워크스페이스)나 모델 사용 권한을 확인해 주세요.';link=CONSOLE;lt='🔑 Console 열기'}
+ else if(st===404||ty==='not_found_error')msg='모델을 찾을 수 없어요. 설정 탭에서 모델을 다시 골라 주세요.';
+ else if(st===413||ty==='request_too_large')msg='보내는 사진 용량이 너무 커요. 사진 수를 줄여서 다시 해 주세요.';
+ else if(st===429||ty==='rate_limit_error')msg='짧은 시간에 요청이 많았어요. 1분쯤 뒤에 다시 해 주세요.';
+ else if(st===529||st>=500||ty==='overloaded_error'||ty==='api_error')msg='Claude 서버가 지금 바빠요. 잠시 뒤 다시 해 주세요.';
+ else msg=`문제가 생겼어요 (${st}): ${m||'알 수 없는 오류'}`;
+ const e=new Error(msg);e.link=link;e.linkText=lt;return e}
+function errHtml(e){return `<div class="warn">${esc(e&&e.message||e)}${e&&e.link?`<br><a class="sm" href="${e.link}" target="_blank" rel="noopener">${esc(e.linkText)}</a>`:''}</div>`}
+async function callClaude(content,maxTokens=16000,effort='medium'){
  const s=LS.get('settings',{});
- if(!s.key){alert('설정 탭에서 API 키를 먼저 넣어 주세요.');switchTab('set');throw new Error('API 키 없음')}
+ if(!s.key){alert('설정 탭에서 API 키를 먼저 넣어 주세요.');switchTab('set');throw new Error('API 키를 먼저 넣어 주세요.')}
  const m=monthUsage();if(m.won>=m.budget&&!confirm(`이번 달 예산(${m.budget.toLocaleString()}원)을 넘었어요. 지금 약 ${m.won.toLocaleString()}원 썼어요.\n그래도 진행할까요?`))throw new Error('예산 초과로 취소했어요');
- const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+ const body={model:s.model||DEF_MODEL,max_tokens:maxTokens,messages:[{role:'user',content}]};
+ if(effort)body.output_config={effort};
+ let r,j;
+ const send=async()=>{try{r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
   headers:{'content-type':'application/json','x-api-key':s.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-  body:JSON.stringify({model:s.model||'claude-sonnet-5-5',max_tokens:maxTokens,messages:[{role:'user',content}]})});
- const j=await r.json().catch(()=>({}));
- if(!r.ok)throw new Error(j.error?.message||('오류 '+r.status));
+  body:JSON.stringify(body)})}catch(e){throw apiErr('net')}
+  j=await r.json().catch(()=>({}))};
+ await send();
+ if(!r.ok&&r.status===400&&body.output_config&&/effort|output_config/i.test(j.error?.message||'')){delete body.output_config;await send()}
+ if(!r.ok)throw apiErr(r.status,j);
  trackUsage(j.usage);
  if(j.stop_reason==='max_tokens')throw new Error('글이 너무 길어서 중간에 끊겼어요. 글 길이를 줄이거나 사진을 줄여서 다시 해 주세요.');
- return (j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('')}
+ if(j.stop_reason==='refusal')throw new Error('Claude가 이 요청에는 답하지 않았어요. 메모나 사진을 바꿔서 다시 해 주세요.');
+ const t=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+ if(!t.trim())throw new Error('답이 비어 있어요. 다시 시도해 주세요.');
+ return t}
 function parseJSON(t){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<0)throw new Error('응답 형식 오류');return JSON.parse(t.slice(a,b+1))}
 function styleBlock(k){const st=LS.get('style',{}),L=LS.get('learned',[]),set=LS.get('settings',{}),t=k?tplOf(k):null;
  let s=`[글쓴이 기본 말투]\n- 어미: ${st.end||'~요체'}\n- 이모지: ${st.emo||'가끔'}\n- 문장 길이: ${st.sent||'보통'}\n- 웃음 표현: ${st.laugh||'ㅎㅎ 가끔'}\n`;
@@ -563,7 +600,7 @@ ${makeCp?`12. 쿠팡 리뷰도 따로 써: 블로그와 문장이 겹치지 않�
  const content=[...photos.map(p=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:p.small.split(',')[1]}})),{type:'text',text:prompt}];
  $('#result').innerHTML='<div class="card loading">✍ 사진 보면서 쓰는 중... (30초~1분)</div>';
  $('#result').scrollIntoView({behavior:'smooth'});
- try{const d=parseJSON(await callClaude(content));
+ try{const d=parseJSON(await callClaude(content,16000,'medium'));
   let body=d.body||'';
   if(cpLink)body=PARTNER_DISC+'\n\n'+body+'\n\n🛒 제품 링크: '+cpLink;
   const tg=d.tagGroups||{},tags=[...(tg.big||[]),...(tg.mid||[]),...(tg.long||[])];
@@ -574,7 +611,7 @@ ${makeCp?`12. 쿠팡 리뷰도 따로 써: 블로그와 문장이 겹치지 않�
    trip:isTrip?{name:trName,kind:trKind,day:trDay}:null,place:hasPlace?{name:plName,info:plInfo}:null,scores,
    thumb:{src:0,style:'grad',font:'bhs',ratio:'sq',...(current?.thumb||{}),sub:d.thumb?.sub||'',main:d.thumb?.main||''}};
   renderResult()}
- catch(e){$('#result').innerHTML=`<div class="card warn">문제가 생겼어요: ${esc(e.message)}<br>다시 시도해 주세요.</div>`}}
+ catch(e){$('#result').innerHTML=`<div class="card">${errHtml(e)}</div>`}}
 function tagGroupHtml(tg){if(!tg||!((tg.big||[]).length||(tg.mid||[]).length||(tg.long||[]).length))return '';
  return `<div class="tagG"><b>태그 단계</b> <span class="muted">(AI 추정 · 누르면 네이버 검색으로 연관검색어 확인)</span>`
   +[['big','대표'],['mid','중간'],['long','세부']].map(([k,n])=>(tg[k]||[]).length?`<div>${n}: ${tg[k].map(x=>`<a class="t" href="https://search.naver.com/search.naver?query=${encodeURIComponent(x)}" target="_blank">#${esc(x)}</a>`).join('')}</div>`:'').join('')
@@ -771,9 +808,9 @@ function saveStyle(silent){LS.set('style',{end:$('#s_end').value,emo:$('#s_emo')
 async function styleTest(){saveStyle(true);$('#stOut').innerHTML='<div class="loading">세 가지 말투로 써보는 중...</div>';
  const p=`${styleBlock()}\n위 글쓴이 설정으로 '주말에 아이랑 새로 생긴 실내 놀이터에 다녀온 이야기'의 블로그 첫 문단(3~4문장)을 써줘.
 1번은 설정에 최대한 충실하게, 2번은 더 담백하고 정보 위주로, 3번은 더 수다스럽고 친근하게. 다른 말 없이 JSON만: {"opts":["1번","2번","3번"]}`;
- try{const d=parseJSON(await callClaude([{type:'text',text:p}],1500));
+ try{const d=parseJSON(await callClaude([{type:'text',text:p}],4000,'low'));
   $('#stOut').innerHTML=d.opts.map((o,i)=>`<div class="opt" onclick="pickStyle(${i})"><b>${['설정 그대로','더 담백하게','더 수다스럽게'][i]}</b><br><span id="opt${i}">${esc(o)}</span></div>`).join('')+'<p class="muted">제일 나다운 걸 눌러 주세요.</p>'}
- catch(e){$('#stOut').innerHTML=`<div class="warn">${esc(e.message)}</div>`}}
+ catch(e){$('#stOut').innerHTML=errHtml(e)}}
 function pickStyle(i){const t=$('#opt'+i).textContent;
  $('#stOut').innerHTML=`<label>내 말투에 더 가깝게 살짝 고쳐 주세요</label><textarea id="stEdit">${esc(t)}</textarea><button class="btn" onclick="saveStylePick()">이걸 내 말투 샘플로 저장</button>`}
 function saveStylePick(){const t=$('#stEdit').value.trim();if(!t)return;$('#s_sample').value=($('#s_sample').value+'\n\n'+t).trim();saveStyle(true);$('#stOut').innerHTML='<p class="muted">✅ 샘플에 추가했어요.</p>'}
@@ -793,9 +830,18 @@ function saveTc(){const k=$('#tcSel').value,C=LS.get('tplCustom',{}),o={};
  C[k]=o;LS.set('tplCustom',C);if(curTpl===k){guide();renderAxes()}toast('저장했어요')}
 function resetTc(){if(!confirm('이 글 종류를 기본값으로 되돌릴까요?'))return;const C=LS.get('tplCustom',{});delete C[$('#tcSel').value];LS.set('tplCustom',C);loadTc();if(curTpl){guide();renderAxes()}toast('기본값으로 돌렸어요')}
 /* ---------- 설정 ---------- */
-function loadSet(){const s=LS.get('settings',{});$('#key').value=s.key||'';$('#model').value=s.model||'claude-sonnet-5-5';$('#blogDesc').value=s.blogDesc||'';$('#askAlarm').checked=s.askAlarm!==false;
- $('#budget').value=s.budget||5000;$('#fx').value=s.fx||1450;$('#pIn').value=s.pIn||P_IN;$('#pOut').value=s.pOut||P_OUT;renderUsage()}
-function saveSet(){LS.set('settings',{...LS.get('settings',{}),key:$('#key').value.trim(),model:$('#model').value.trim(),blogDesc:$('#blogDesc').value.trim(),askAlarm:$('#askAlarm').checked,
+function modelOpts(cur){return Object.entries(MODELS).map(([k,m])=>`<option value="${k}">${esc(m.name)}</option>`).join('')+(cur&&!MODELS[cur]?`<option value="${esc(cur)}">직접 입력: ${esc(cur)}</option>`:'')}
+function modelInfo(){const id=$('#model').value,m=MODELS[id],el=$('#modelInfo');if(!el)return;
+ el.textContent=m?`100만 토큰당 입력 $${m.pIn} / 출력 $${m.pOut} · ${m.tip}`:'목록에 없는 모델이에요. 아래 단가를 직접 맞춰 주세요.'}
+function modelChange(){const id=$('#model').value,m=MODELS[id];
+ if(m){$('#pIn').value=m.pIn;$('#pOut').value=m.pOut}
+ LS.set('settings',{...LS.get('settings',{}),model:id,pIn:+$('#pIn').value||P_IN,pOut:+$('#pOut').value||P_OUT});
+ modelInfo();renderUsage();toast(`모델을 ${shortModel(id)}(으)로 바꿨어요`)}
+function loadSet(){const s=LS.get('settings',{}),md=s.model||DEF_MODEL,m=MODELS[md];
+ $('#key').value=s.key||'';$('#model').innerHTML=modelOpts(md);$('#model').value=md;modelInfo();
+ $('#blogDesc').value=s.blogDesc||'';$('#askAlarm').checked=s.askAlarm!==false;
+ $('#budget').value=s.budget||5000;$('#fx').value=s.fx||1450;$('#pIn').value=s.pIn||(m?m.pIn:P_IN);$('#pOut').value=s.pOut||(m?m.pOut:P_OUT);renderUsage()}
+function saveSet(){LS.set('settings',{...LS.get('settings',{}),key:$('#key').value.trim(),model:$('#model').value,blogDesc:$('#blogDesc').value.trim(),askAlarm:$('#askAlarm').checked,
  budget:+$('#budget').value||5000,fx:+$('#fx').value||1450,pIn:+$('#pIn').value||P_IN,pOut:+$('#pOut').value||P_OUT});renderUsage();alert('저장했어요')}
 function exportData(){const d={ver:VER,style:LS.get('style',{}),learned:LS.get('learned',[]),queue:LS.get('queue',[]),tplCustom:LS.get('tplCustom',{}),blogDesc:LS.get('settings',{}).blogDesc||''};
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,1)],{type:'application/json'}));a.download='블로그비서_백업.json';a.click()}
